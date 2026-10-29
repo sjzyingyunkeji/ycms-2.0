@@ -1,0 +1,14 @@
+{
+  "slug": "default",
+  "name": "默认主题",
+  "version": "2.0.1",
+  "author": "影云网络科技（石家庄）有限公司",
+  "description": "YCMS 2.0 内置主题（扁平商务风，Arco Design Vue + 胶囊导航）",
+  "license": "AGPL-3.0",
+  "requires": { "core": ">=2.0.1" },
+  "entry": "index.html",
+  "templates": "templates",
+  "preview": "preview.jpg",
+  "supports": { "dark_mode": false, "custom_css": false },
+  "settings_schema": []
+}

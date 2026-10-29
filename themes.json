@@ -1,0 +1,22 @@
+{
+    "generated_at": "2026-10-29T16:06:25.232Z",
+    "core_version": "2.0.1",
+    "themes": {
+        "default": {
+            "slug": "default",
+            "name": "默认主题",
+            "version": "2.0.1",
+            "author": "影云网络科技（石家庄）有限公司",
+            "description": "YCMS 2.0 内置主题（扁平商务风，Arco Design Vue + 胶囊导航）",
+            "license": "AGPL-3.0",
+            "requires": {
+                "core": ">=2.0.1"
+            },
+            "preview": "preview.jpg",
+            "package": "ycms-theme-default-2.0.1.zip",
+            "size": 440437,
+            "sha256": "90275f71d4abb453ad3a86c4bbaf373ce700866dab9502763ba8c8ac6ff9a7cd",
+            "url": "https://github.com/sjzyingyunkeji/ycms-2.0/releases/download/v2.0.1/ycms-theme-default-2.0.1.zip"
+        }
+    }
+}

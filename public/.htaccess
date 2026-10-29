@@ -1,0 +1,24 @@
+# YCMS 2.0 - Apache / LiteSpeed 兼容规则
+# Nginx 无需任何配置：API 走真实文件 /api.php，页面为静态文件
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # 已存在的文件/目录直接访问
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # 其余请求交给入口文件（前台 SPA 回退）
+  RewriteRule ^ index.php [L]
+</IfModule>
+
+# 禁止访问敏感文件
+<FilesMatch "\.(lock|sqlite|env)$">
+  Require all denied
+</FilesMatch>
+
+# 上传目录禁止执行脚本
+<IfModule mod_php.c>
+  php_flag engine off
+</IfModule>
