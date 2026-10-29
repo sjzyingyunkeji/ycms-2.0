@@ -1,0 +1,31 @@
+{
+  "name": "ycms2.0-frontend",
+  "version": "2.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:admin": "vite --mode admin",
+    "build": "npm run build:site && npm run build:admin",
+    "build:site": "node scripts/clean-site-assets.mjs && vite build --mode site",
+    "build:admin": "vite build --mode admin && node scripts/fix-admin-output.mjs",
+    "pack:theme": "npm run build:site && node scripts/pack-theme.mjs",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@arco-design/web-vue": "^2.59.0",
+    "axios": "^1.7.9",
+    "dompurify": "^3.2.3",
+    "marked": "^15.0.6",
+    "pinia": "^2.3.0",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.1",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "vite": "^6.0.5"
+  }
+}

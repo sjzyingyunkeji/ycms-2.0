@@ -1,0 +1,79 @@
+<article class="y-container-narrow py-12">
+  <nav class="flex items-center gap-2 text-xs text-[var(--y-text-muted)] mb-6" aria-label="面包屑">
+    <a href="/" class="hover:text-[var(--y-primary)] transition-colors duration-200">首页</a>
+    <span>/</span>
+    <a href="/posts" class="hover:text-[var(--y-primary)] transition-colors duration-200">文章</a>
+    {{#has_category}}
+    <span>/</span>
+    <a href="{{category_url}}" class="hover:text-[var(--y-primary)] transition-colors duration-200">{{category_name}}</a>
+    {{/has_category}}
+  </nav>
+
+  <header class="mb-8">
+    <h1 class="text-2xl md:text-4xl font-bold text-[var(--y-text)] leading-tight mb-4">{{title}}</h1>
+    <div class="flex flex-wrap items-center gap-3 text-xs">
+      {{#has_category}}
+      <a class="y-tag y-tag-primary" href="{{category_url}}">{{category_name}}</a>
+      {{/has_category}}
+      <span class="text-[var(--y-text-muted)]">{{published_at}}</span>
+      <span class="text-[var(--y-text-muted)]">{{views}} 次阅读</span>
+      {{#has_author}}
+      <span class="text-[var(--y-text-muted)]">@{{author}}</span>
+      {{/has_author}}
+    </div>
+    {{#has_tags}}
+    <div class="flex flex-wrap gap-2 mt-4">
+      {{#tags}}
+      <a class="y-tag y-tag-plain" href="{{url}}">#{{name}}</a>
+      {{/tags}}
+    </div>
+    {{/has_tags}}
+  </header>
+
+  {{#has_cover}}
+  <div class="mb-8 rounded-[var(--y-radius-card)] overflow-hidden border border-[var(--y-border)]">
+    <img src="{{cover_url}}" alt="{{title}}" class="w-full" />
+  </div>
+  {{/has_cover}}
+
+  <div class="y-card p-6 md:p-9">
+    <div class="y-prose">{{{content}}}</div>
+  </div>
+
+  {{#has_prev_next}}
+  <nav class="grid md:grid-cols-2 gap-3 mt-6">
+    {{#has_prev}}
+    <a class="y-card y-card-hover p-4 group" href="{{prev_url}}">
+      <div class="text-xs text-[var(--y-text-muted)] mb-1">← 上一篇</div>
+      <div class="text-sm text-[var(--y-text-secondary)] group-hover:text-[var(--y-primary)] transition-colors duration-200 truncate">{{prev_title}}</div>
+    </a>
+    {{/has_prev}}
+    {{#has_next}}
+    <a class="y-card y-card-hover p-4 group md:text-right md:col-start-2" href="{{next_url}}">
+      <div class="text-xs text-[var(--y-text-muted)] mb-1">下一篇 →</div>
+      <div class="text-sm text-[var(--y-text-secondary)] group-hover:text-[var(--y-primary)] transition-colors duration-200 truncate">{{next_title}}</div>
+    </a>
+    {{/has_next}}
+  </nav>
+  {{/has_prev_next}}
+
+  {{#has_related}}
+  <section class="mt-12">
+    <div class="y-section-title">相关文章</div>
+    <div class="grid sm:grid-cols-2 gap-3">
+      {{#related}}
+      <a class="y-card y-card-hover p-4 group block" href="{{url}}">
+        <div class="flex items-center gap-2 text-xs mb-2">
+          <span class="y-tag y-tag-primary">{{category_name}}</span>
+          <span class="text-[var(--y-text-muted)]">{{views}}</span>
+        </div>
+        <h2 class="font-semibold text-[var(--y-text)] group-hover:text-[var(--y-primary)] transition-colors duration-200 text-sm leading-snug">{{title}}</h2>
+        {{#has_summary}}
+        <p class="text-xs text-[var(--y-text-muted)] mt-1.5 leading-relaxed">{{summary}}</p>
+        {{/has_summary}}
+      </a>
+      {{/related}}
+    </div>
+  </section>
+  {{/has_related}}
+</article>

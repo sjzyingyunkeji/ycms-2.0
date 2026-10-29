@@ -1,0 +1,409 @@
+/**
+ * 星空 UI 设计系统（深色 / 玻璃磨砂 / 紫青极光）—— 独立一套，与 ui.css 互不混用
+ * ------------------------------------------------------------
+ * 使用方式：需要星空外观的入口自行 import 本文件，并配合 tailwind.config.js 中的
+ * star-* / space-* 颜色与 glow / twinkle 动画使用。
+ * 当前默认入口（前台 / 后台 / 登录页）统一使用 shared/styles/ui.css（通用扁平 UI）。
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   ycms2.0 · 设计系统（星空星光风格）
+   ------------------------------------------------------------
+   设计原则：
+   1. 色彩：紫/青混入灰调降饱和，高亮星带极淡暖黄星核（真实恒星色温）
+   2. 玻璃分级：强磨砂(视觉重心) / 中度(About·弹窗) / 弱化(普通卡片) / 极简(统计小卡)
+   3. 排版层级：标题粗、摘要降明度、辅助文字更暗；数字/日期/代码用等宽字体
+   4. 动效拆分：transform 用 ease-out，发光透明度用 ease-in-out；按压有压感
+   5. 星盘（光遇）预留：.starmap-* 类复用同一套噪点/星空/色彩/玻璃 token
+   ============================================================ */
+
+@layer base {
+  :root {
+    color-scheme: dark;
+
+    /* —— 缓动 token（星盘拖拽阻尼同用此套） —— */
+    --ease-out-quart: cubic-bezier(0.22, 1, 0.36, 1); /* transform：干脆的减速 */
+    --ease-in-out-soft: cubic-bezier(0.42, 0, 0.58, 1); /* 发光/透明度：柔和呼吸 */
+    --ease-damp: cubic-bezier(0.34, 1.24, 0.4, 1); /* 按压/拖拽回弹：阻尼 */
+
+    /* —— 色彩 token（全站 & 星盘共用） —— */
+    --star-violet: #8f83c9;
+    --star-violet-deep: #6f63ad;
+    --star-cyan: #6fa9bd;
+    --star-cyan-deep: #4f8a9e;
+    --star-glow: #aeb8d9;
+    --star-gold: #c9a86a;
+    --star-warm: #f2e3c2; /* 恒星暖核 */
+    --star-dim: #5b6478; /* 辅助文字 */
+    --space-950: #04061a;
+
+    /* —— 噪点/暗角参数（星盘页面共用） —— */
+    --grain-opacity: 0.045;
+    --vignette-strength: 0.5;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-space-950 text-slate-300 font-sans antialiased;
+    /* 极光渐变：左紫右青，轻微不对称 */
+    background-image:
+      radial-gradient(ellipse 75% 55% at 8% -5%, rgba(111, 99, 173, 0.16), transparent 62%),
+      radial-gradient(ellipse 70% 50% at 92% 12%, rgba(79, 138, 158, 0.13), transparent 62%),
+      radial-gradient(ellipse 85% 55% at 50% 105%, rgba(111, 99, 173, 0.10), transparent 68%);
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+
+  ::selection {
+    @apply bg-star-violet/30 text-star-warm;
+  }
+
+  /* 滚动条 */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: rgba(4, 6, 26, 0.6);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(143, 131, 201, 0.5), rgba(111, 169, 189, 0.4));
+    border-radius: 6px;
+    border: 2px solid rgba(4, 6, 26, 0.8);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(143, 131, 201, 0.8), rgba(111, 169, 189, 0.65));
+  }
+}
+
+/* ============================================================
+   玻璃分级体系
+   ============================================================ */
+@layer components {
+  /* ① 弱磨砂 —— 普通文章卡片：深色半透明底 + 极淡阴影，圆角 12px */
+  .glass {
+    @apply bg-white/[0.022] border border-white/[0.06] rounded-xl;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    box-shadow: 0 2px 12px rgba(4, 6, 26, 0.25);
+  }
+
+  /* ② 中度磨砂 —— About 卡片 / 弹窗：blur 8px，圆角 16px */
+  .glass-medium {
+    @apply bg-white/[0.04] border border-white/[0.08] rounded-2xl;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      0 6px 24px rgba(4, 6, 26, 0.4);
+  }
+
+  /* ③ 强磨砂 —— 置顶文章卡片 / 视觉重心：blur 12px、渐变描边、双层柔光 */
+  .glass-strong {
+    position: relative;
+    @apply bg-white/[0.05] border border-white/[0.10] rounded-2xl;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 0 24px rgba(143, 131, 201, 0.14), /* 柔光一：紫 */
+      0 0 48px rgba(111, 169, 189, 0.07), /* 柔光二：青 */
+      0 14px 44px rgba(4, 6, 26, 0.55); /* 投影 */
+  }
+  /* 渐变描边（紫 → 青 → 透明），用 mask 实现，不影响 backdrop-filter */
+  .glass-strong::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(140deg, rgba(174, 184, 217, 0.5), rgba(143, 131, 201, 0.35) 40%, rgba(111, 169, 189, 0.28) 70%, transparent);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* ④ 极简 —— 统计小卡片：无外阴影、无描边，hover 才浮现微光 */
+  .stat-card {
+    @apply rounded-xl bg-white/[0.02] transition-all duration-300;
+  }
+  .stat-card:hover {
+    background: rgba(255, 255, 255, 0.045);
+    box-shadow: 0 0 16px rgba(143, 131, 201, 0.12);
+  }
+
+  /* —— 星光文字 —— */
+  .text-starlight {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(120deg, #cbd5e1 0%, #aeb8d9 35%, #8fb6c4 70%, #d8c9a8 100%);
+  }
+  .text-glow {
+    text-shadow: 0 0 24px rgba(143, 131, 201, 0.35), 0 0 64px rgba(111, 169, 189, 0.12);
+  }
+
+  /* —— 按钮 —— */
+  .btn-star {
+    @apply relative inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-medium text-white overflow-hidden;
+    background: linear-gradient(120deg, rgba(111, 99, 173, 0.85), rgba(79, 110, 158, 0.75), rgba(79, 138, 158, 0.7));
+    box-shadow: 0 0 18px rgba(143, 131, 201, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+    /* 动效拆分：transform 走 ease-out，发光走 ease-in-out */
+    transition:
+      transform 0.28s var(--ease-out-quart),
+      box-shadow 0.35s var(--ease-in-out-soft);
+  }
+  .btn-star:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 30px rgba(143, 131, 201, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+  .btn-star:active {
+    transform: translateY(0) scale(0.96); /* 按压压感 */
+  }
+  .btn-star:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-medium text-slate-400 border border-white/[0.08] bg-white/[0.02];
+    transition:
+      transform 0.28s var(--ease-out-quart),
+      color 0.3s var(--ease-in-out-soft),
+      background-color 0.3s var(--ease-in-out-soft),
+      border-color 0.3s var(--ease-in-out-soft);
+  }
+  .btn-ghost:hover {
+    @apply text-slate-100 bg-white/[0.05] border-white/[0.14];
+  }
+  .btn-ghost:active {
+    transform: scale(0.96);
+  }
+
+  /* —— 输入框 —— */
+  .input-star {
+    @apply w-full px-4 py-2.5 rounded-xl bg-space-900/50 border border-white/[0.08] text-slate-200 placeholder-slate-600 outline-none;
+    transition:
+      border-color 0.3s var(--ease-in-out-soft),
+      box-shadow 0.3s var(--ease-in-out-soft),
+      background-color 0.3s var(--ease-in-out-soft);
+  }
+  .input-star:focus {
+    @apply border-star-violet/50 bg-space-800/60;
+    box-shadow: 0 0 0 3px rgba(143, 131, 201, 0.14), 0 0 16px rgba(143, 131, 201, 0.1);
+  }
+
+  /* —— 标签体系：置顶暖金 / 分类淡紫 —— */
+  .chip {
+    @apply inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border border-white/[0.09] bg-white/[0.025] text-slate-400;
+    transition:
+      color 0.3s var(--ease-in-out-soft),
+      border-color 0.3s var(--ease-in-out-soft),
+      background-color 0.3s var(--ease-in-out-soft);
+  }
+  .chip:hover {
+    @apply text-slate-100 border-star-violet/40;
+    background: rgba(143, 131, 201, 0.1);
+  }
+
+  /* 置顶标签：暖金细边框 + 暖金文字 */
+  .tag-pinned {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium border;
+    border-color: rgba(201, 168, 106, 0.45);
+    color: #d8c9a8;
+    background: rgba(201, 168, 106, 0.08);
+  }
+  /* 分类标签：淡紫细边框 */
+  .tag-category {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium border;
+    border-color: rgba(143, 131, 201, 0.4);
+    color: #b4aed4;
+    background: rgba(143, 131, 201, 0.07);
+  }
+  /* 正文标签胶囊 */
+  .tag-post {
+    @apply inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs text-slate-400 border border-white/[0.08] bg-white/[0.02];
+    transition: color 0.3s var(--ease-in-out-soft), border-color 0.3s var(--ease-in-out-soft);
+  }
+  .tag-post:hover {
+    @apply text-slate-100;
+    border-color: rgba(143, 131, 201, 0.45);
+  }
+
+  /* —— 卡片悬浮：transform ease-out + 发光 ease-in-out —— */
+  .hover-lift {
+    transition:
+      transform 0.4s var(--ease-out-quart),
+      box-shadow 0.4s var(--ease-in-out-soft),
+      border-color 0.4s var(--ease-in-out-soft);
+  }
+  .hover-lift:hover {
+    transform: translateY(-5px);
+    border-color: rgba(143, 131, 201, 0.35);
+    box-shadow:
+      0 0 20px rgba(143, 131, 201, 0.12),
+      0 18px 44px rgba(4, 6, 26, 0.6);
+  }
+
+  /* —— 星星分隔 —— */
+  .star-divider {
+    @apply flex items-center gap-3 text-star-glow/60;
+  }
+  .star-divider::before,
+  .star-divider::after {
+    content: '';
+    @apply flex-1 h-px;
+    background: linear-gradient(90deg, transparent, rgba(174, 184, 217, 0.4), transparent);
+  }
+
+  /* —— 排版层级 —— */
+  .text-aux {
+    @apply text-star-dim; /* 日期 / 阅读数等辅助文字：更暗 */
+  }
+  .text-meta {
+    @apply text-xs text-star-dim font-mono tracking-wide; /* 等宽字体元信息 */
+  }
+
+  /* —— 后台数据表格 —— */
+  .w-admin-table {
+    @apply w-full text-sm;
+  }
+  .w-admin-table th {
+    @apply px-4 py-3.5 text-xs font-medium text-slate-500 whitespace-nowrap;
+  }
+  .w-admin-table td {
+    @apply px-4 py-3.5 align-middle;
+  }
+
+  .table-action {
+    @apply text-xs text-star-glow hover:text-white px-2.5 py-1 rounded-lg hover:bg-white/[0.05];
+    transition: color 0.3s var(--ease-in-out-soft), background-color 0.3s var(--ease-in-out-soft);
+  }
+  .table-action-danger {
+    @apply text-xs text-rose-300/80 hover:text-rose-100 px-2.5 py-1 rounded-lg hover:bg-rose-500/10;
+    transition: color 0.3s var(--ease-in-out-soft), background-color 0.3s var(--ease-in-out-soft);
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-medium text-white border border-rose-500/30 bg-rose-500/15 hover:bg-rose-500/25 disabled:opacity-50 disabled:cursor-not-allowed;
+    transition:
+      transform 0.28s var(--ease-out-quart),
+      background-color 0.3s var(--ease-in-out-soft);
+  }
+  .btn-danger:active {
+    transform: scale(0.96);
+  }
+
+  /* ============================================================
+     星盘（光遇）预留 token —— 与前台共用噪点/星空/色彩/玻璃
+     ============================================================ */
+  /* 星盘弹出卡片：直接复用置顶文章强磨砂样式 */
+  .starmap-modal {
+    /* 同 .glass-strong */
+    position: relative;
+    @apply bg-white/[0.05] border border-white/[0.10] rounded-2xl;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 0 24px rgba(143, 131, 201, 0.14),
+      0 0 48px rgba(111, 169, 189, 0.07),
+      0 14px 44px rgba(4, 6, 26, 0.55);
+  }
+  /* 星盘节点微光 */
+  .starmap-node {
+    box-shadow: 0 0 12px rgba(242, 227, 194, 0.25);
+    transition:
+      transform 0.3s var(--ease-damp),
+      box-shadow 0.35s var(--ease-in-out-soft);
+  }
+  .starmap-node:hover {
+    transform: scale(1.15);
+    box-shadow: 0 0 22px rgba(242, 227, 194, 0.45);
+  }
+  /* 星盘拖拽容器（阻尼手感预留） */
+  .starmap-drag {
+    cursor: grab;
+    transition: transform 0.45s var(--ease-damp);
+  }
+  .starmap-drag:active {
+    cursor: grabbing;
+  }
+}
+
+@keyframes pageIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================================
+   Markdown 排版
+   ============================================================ */
+.markdown-body {
+  @apply text-[15px] leading-[1.9] text-slate-400;
+}
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4 {
+  @apply font-serif text-slate-100 mt-8 mb-4 font-bold;
+}
+.markdown-body h1 { @apply text-2xl; }
+.markdown-body h2 {
+  @apply text-xl pb-2 border-b border-white/[0.08];
+}
+.markdown-body h3 { @apply text-lg; }
+.markdown-body h4 { @apply text-base; }
+.markdown-body p { @apply my-4; }
+.markdown-body a {
+  @apply text-star-cyan underline decoration-star-cyan/30 underline-offset-2;
+  transition: color 0.3s var(--ease-in-out-soft);
+}
+.markdown-body a:hover { @apply text-star-violet; }
+.markdown-body strong { @apply text-slate-100 font-semibold; }
+.markdown-body ul,
+.markdown-body ol { @apply my-4 pl-6; }
+.markdown-body ul { @apply list-disc; }
+.markdown-body ol { @apply list-decimal; }
+.markdown-body li { @apply my-1.5; }
+.markdown-body li::marker { @apply text-star-violet/70; }
+.markdown-body blockquote {
+  @apply my-5 pl-4 py-1 border-l-2 border-star-violet/50 bg-white/[0.02] rounded-r-lg text-slate-500 italic;
+}
+.markdown-body code {
+  @apply font-mono text-[0.88em] px-1.5 py-0.5 rounded bg-space-800/70 text-star-glow border border-white/[0.05];
+}
+.markdown-body pre {
+  @apply my-5 p-4 rounded-xl bg-space-950/70 border border-white/[0.07] overflow-x-auto;
+}
+.markdown-body pre code {
+  @apply bg-transparent border-0 p-0 text-[13px] leading-relaxed text-slate-300;
+}
+.markdown-body hr {
+  @apply my-8 border-0 h-px;
+  background: linear-gradient(90deg, transparent, rgba(174, 184, 217, 0.3), transparent);
+}
+.markdown-body img {
+  @apply my-4 rounded-xl border border-white/[0.08] max-w-full;
+}
+.markdown-body table {
+  @apply my-5 w-full border-collapse text-sm;
+}
+.markdown-body th,
+.markdown-body td {
+  @apply border border-white/[0.08] px-3 py-2;
+}
+.markdown-body th { @apply bg-white/[0.03] text-slate-200; }

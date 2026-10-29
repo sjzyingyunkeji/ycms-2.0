@@ -1,0 +1,24 @@
+{
+    "name": "ycms/ycms2",
+    "description": "YCMS 2.0 | 基于 PHP + Node.js 的轻量内容管理系统 | Copyright © 2026 影云网络科技（石家庄）有限公司 | 开源协议：AGPLv3 License | GitHub：https://github.com/sjzyingyunkeji/ycms-2.0",
+    "type": "project",
+    "version": "2.0.1",
+    "require": {
+        "php": ">=8.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        },
+        "files": [
+            "src/Support/helpers.php"
+        ]
+    },
+    "config": {
+        "optimize-autoloader": true
+    },
+    "scripts": {
+        "serve": "php -S localhost:8080 -t public",
+        "seed": "php database/seed.php"
+    }
+}

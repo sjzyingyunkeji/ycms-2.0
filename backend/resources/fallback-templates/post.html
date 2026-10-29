@@ -1,0 +1,31 @@
+<article class="ycms-post">
+  <header>
+    <h1>{{title}}</h1>
+    <p class="meta">
+      {{#has_category}}<a href="{{category_url}}">{{category_name}}</a> · {{/has_category}}
+      <time>{{published_at}}</time> · {{views}} 次阅读
+      {{#has_author}} · @{{author}}{{/has_author}}
+    </p>
+    {{#has_tags}}
+    <p class="tags">
+      {{#tags}}<a href="{{url}}">{{name}}</a> {{/tags}}
+    </p>
+    {{/has_tags}}
+  </header>
+  {{#has_cover}}<img src="{{cover_url}}" alt="{{title}}" />{{/has_cover}}
+  <div class="content">{{{content}}}</div>
+  {{#has_prev_next}}
+  <nav class="prev-next">
+    {{#has_prev}}<a href="{{prev_url}}">← {{prev_title}}</a>{{/has_prev}}
+    {{#has_next}}<a href="{{next_url}}">{{next_title}} →</a>{{/has_next}}
+  </nav>
+  {{/has_prev_next}}
+  {{#has_related}}
+  <section class="related">
+    <h2>相关文章</h2>
+    <ul>
+      {{#related}}<li><a href="{{url}}">{{title}}</a></li>{{/related}}
+    </ul>
+  </section>
+  {{/has_related}}
+</article>

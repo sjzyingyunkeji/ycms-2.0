@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <!--
+      YCMS 2.0 | 基于 PHP + Node.js 的轻量内容管理系统
+      Copyright © 2026 影云网络科技（石家庄）有限公司
+      开源协议：AGPLv3 License
+      GitHub：https://github.com/sjzyingyunkeji/ycms-2.0
+      本程序遵循 AGPLv3 协议：公网提供服务、衍生分发时，必须同步开放对应源码；
+      如有商用授权、定制合作需求，欢迎联系：info@sjzyingyun.cn
+    -->    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/themes/default/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    
+    <script type="module" crossorigin src="/themes/default/assets/index-cElnESZ8.js"></script>
+    <link rel="stylesheet" crossorigin href="/themes/default/assets/index-BaphY2ml.css">
+      <title>PHP 8.2 的新特性速览 · ycms2.0</title>
+    <meta name="description" content="只读类、独立类型、 trait 常量、敏感参数隐藏…… PHP 8.2 带来了哪些值得关注的改进？" />
+    <meta name="keywords" content="PHP 8.2 的新特性速览, 技术随笔, ycms,技术博客,星空,PHP,Vue" />
+    <meta name="robots" content="index, follow" />
+    <meta name="author" content="星尘管理员" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="PHP 8.2 的新特性速览 · ycms2.0" />
+    <meta property="og:description" content="只读类、独立类型、 trait 常量、敏感参数隐藏…… PHP 8.2 带来了哪些值得关注的改进？" />
+    <meta property="og:url" content="http://localhost/post/php-82-features" />
+    <link rel="canonical" href="http://localhost/post/php-82-features" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="PHP 8.2 的新特性速览 · ycms2.0" />
+    <meta name="twitter:description" content="只读类、独立类型、 trait 常量、敏感参数隐藏…… PHP 8.2 带来了哪些值得关注的改进？" />
+    <meta property="article:published_time" content="2026-10-25 00:13:23" />
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"PHP 8.2 的新特性速览","description":"只读类、独立类型、 trait 常量、敏感参数隐藏…… PHP 8.2 带来了哪些值得关注的改进？","image":[],"datePublished":"2026-10-25 00:13:23","dateModified":"2026-10-25 00:13:23","author":{"@type":"Person","name":"星尘管理员"},"publisher":{"@type":"Organization","name":"ycms2.0"},"mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost/post/php-82-features"},"articleSection":"技术随笔","keywords":"PHP 8.2 的新特性速览, 技术随笔, ycms,技术博客,星空,PHP,Vue","wordCount":622}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"首页","item":"http://localhost/"},{"@type":"ListItem","position":2,"name":"文章","item":"http://localhost/posts"},{"@type":"ListItem","position":3,"name":"PHP 8.2 的新特性速览","item":"http://localhost/post/php-82-features"}]}</script>
+  </head>
+  <body>
+    <div id="app"><article class="y-container-narrow py-12">
+  <nav class="flex items-center gap-2 text-xs text-[var(--y-text-muted)] mb-6" aria-label="面包屑">
+    <a href="/" class="hover:text-[var(--y-primary)] transition-colors duration-200">首页</a>
+    <span>/</span>
+    <a href="/posts" class="hover:text-[var(--y-primary)] transition-colors duration-200">文章</a>
+    
+    <span>/</span>
+    <a href="/category/1" class="hover:text-[var(--y-primary)] transition-colors duration-200">技术随笔</a>
+    
+  </nav>
+
+  <header class="mb-8">
+    <h1 class="text-2xl md:text-4xl font-bold text-[var(--y-text)] leading-tight mb-4">PHP 8.2 的新特性速览</h1>
+    <div class="flex flex-wrap items-center gap-3 text-xs">
+      
+      <a class="y-tag y-tag-primary" href="/category/1">技术随笔</a>
+      
+      <span class="text-[var(--y-text-muted)]">2026-10-25</span>
+      <span class="text-[var(--y-text-muted)]">0 次阅读</span>
+      
+      <span class="text-[var(--y-text-muted)]">@星尘管理员</span>
+      
+    </div>
+    
+  </header>
+
+  
+
+  <div class="y-card p-6 md:p-9">
+    <div class="y-prose"><h2>PHP 8.2 值得关注的新特性</h2>
+<h3>1. 只读类（Readonly Classes）</h3>
+<p>PHP 8.1 引入了只读属性，8.2 更进一步，可以将整个类标记为只读：</p>
+<pre><code class="language-php">readonly class Point {
+    public function __construct(
+        public float $x,
+        public float $y,
+    ) {}
+}</code></pre>
+<h3>2. 独立类型（Standalone Types）</h3>
+<p>新增 <code>null</code>、<code>true</code>、<code>false</code> 作为独立类型声明：</p>
+<pre><code class="language-php">function process(null|string $value): true {
+    return true;
+}</code></pre>
+<h3>3. 敏感参数隐藏</h3>
+<p>使用 <code>#[\SensitiveParameter]</code> 属性，在堆栈追踪中隐藏敏感参数值。</p>
+<h3>4. 随机数扩展</h3>
+<p>新增 <code>Randomizer</code> 类，提供更现代的随机数 API：</p>
+<pre><code class="language-php">$randomizer = new Random\Randomizer();
+$randomizer-&gt;getInt(1, 100);</code></pre>
+<blockquote><p>这些特性让 PHP 在类型安全与现代工程化上又前进了一大步。</p></blockquote></div>
+  </div>
+
+  
+
+  
+  <section class="mt-12">
+    <div class="y-section-title">相关文章</div>
+    <div class="grid sm:grid-cols-2 gap-3">
+      
+      <a class="y-card y-card-hover p-4 group block" href="/post/welcome-to-ycms2">
+        <div class="flex items-center gap-2 text-xs mb-2">
+          <span class="y-tag y-tag-primary">技术随笔</span>
+          <span class="text-[var(--y-text-muted)]">5</span>
+        </div>
+        <h2 class="font-semibold text-[var(--y-text)] group-hover:text-[var(--y-primary)] transition-colors duration-200 text-sm leading-snug">欢迎来到 ycms2.0</h2>
+        
+        <p class="text-xs text-[var(--y-text-muted)] mt-1.5 leading-relaxed">一个用 PHP 8.2+ 与 Vue 3 打造的星空风格内容管理系统，本文带你快速了解它的全部功能。</p>
+        
+      </a>
+      
+      <a class="y-card y-card-hover p-4 group block" href="/post/vue3-composition-api">
+        <div class="flex items-center gap-2 text-xs mb-2">
+          <span class="y-tag y-tag-primary">技术随笔</span>
+          <span class="text-[var(--y-text-muted)]">0</span>
+        </div>
+        <h2 class="font-semibold text-[var(--y-text)] group-hover:text-[var(--y-primary)] transition-colors duration-200 text-sm leading-snug">用 Vue 3 组合式 API 组织前端代码</h2>
+        
+        <p class="text-xs text-[var(--y-text-muted)] mt-1.5 leading-relaxed">setup、ref、computed、watch……组合式 API 如何让大型前端项目的逻辑复用变得优雅？</p>
+        
+      </a>
+      
+      <a class="y-card y-card-hover p-4 group block" href="/post/why-i-choose-sqlite">
+        <div class="flex items-center gap-2 text-xs mb-2">
+          <span class="y-tag y-tag-primary">技术随笔</span>
+          <span class="text-[var(--y-text-muted)]">0</span>
+        </div>
+        <h2 class="font-semibold text-[var(--y-text)] group-hover:text-[var(--y-primary)] transition-colors duration-200 text-sm leading-snug">为什么我选择 SQLite</h2>
+        
+        <p class="text-xs text-[var(--y-text-muted)] mt-1.5 leading-relaxed">零配置、单文件、WAL 模式——对于中小型站点，SQLite 是被低估的王者。</p>
+        
+      </a>
+      
+    </div>
+  </section>
+  
+</article>
+</div>
+  </body>
+</html>
