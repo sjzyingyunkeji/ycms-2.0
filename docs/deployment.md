@@ -332,9 +332,9 @@ php database/seed.php
 
 ### 忘记密码怎么办（应急重置）
 
-`backend/tools/reset-password.php` 是独立的高危重置文件，**平时放在 tools/ 目录不要上传**：
+`backend/tools/reset-password.php` 是独立的高危重置文件，**不随安装包/升级包分发**，忘记密码时从仓库下载：[reset-password.php](https://raw.githubusercontent.com/sjzyingyunkeji/ycms-2.0/main/backend/tools/reset-password.php)。
 
-1. 忘记密码时，通过宝塔「文件」或 SFTP 将其上传到 `backend/public/` 目录
+1. 下载后通过宝塔「文件」或 SFTP 将其上传到 `backend/public/` 目录
 2. 访问 `https://你的域名/reset-password.php`，点击「确认重置密码」
 3. 账号恢复为 `admin / admin123`，重新登录并完成强制初始化
 4. **重置后立即删除该文件**——后台登录成功后也会在顶部显示红色警告提醒你删除
@@ -364,7 +364,9 @@ public/
 
 ```bash
 cd frontend
-npm run pack:theme        # 构建前台后打包，零第三方依赖
+npm run pack:theme        # 构建默认主题后打包，零第三方依赖
+npm run pack:star         # 构建星空主题后打包
+npm run pack:all          # 两套主题一起打包
 ```
 
 产出：
@@ -372,11 +374,34 @@ npm run pack:theme        # 构建前台后打包，零第三方依赖
 | 产物 | 说明 |
 | --- | --- |
 | `release/themes/ycms-theme-<slug>-<version>.zip` | 主题包本体，含 `theme.json` / 外壳 / 资源 / 模板 / 预览图 |
-| `themes.json` | 主题清单：版本、包名、体积、sha256、下载地址 |
+| `themes.json` | 主题清单：版本、包名、体积、sha256、下载地址（按 slug 合并写入） |
 | `update.json` 的 `themes` 字段 | 在线更新读取的主题摘要 |
 
+**打包单主题发行包**（各自带全套后端，用于「一主题一安装包」分发）：
+
+```bash
+node scripts/build-release.mjs --edition=oss --theme=star   # → release/ycms-<version>-oss-star/
+node scripts/build-release.mjs --edition=oss --theme=default
+```
+
+脚本会裁剪 `public/themes/` 到单一主题、让该主题外壳接管 `public/index.html`、重写 `backend/storage/theme.json` 为 `active=<slug>`，并按该主题重建静态页；构建用的数据库是临时拷入、结束后立即删除，不会进入发行包。
+
+**发布源与发行风味**（`release-source.json`）：
+
+站点检查更新、下载升级包所用的仓库地址由根目录 `release-source.json` 决定，该文件随包分发：
+
+```json
+{ "repository": "sjzyingyunkeji/ycms-2.0", "branch": "main", "channel": "stable", "flavor": "default" }
+```
+
+- 清单地址：`https://raw.githubusercontent.com/<repository>/<branch>/update.json`
+- 包地址：`https://github.com/<repository>/releases/download/v<version>/<file>`
+- `flavor` 为发行风味（`default` / `star`）。站点只接受同风味清单与升级包，两条发行线不会互相覆盖；离线包导入时同样校验。
+- 星空主题独立仓库只需把该文件改为自身仓库，升级逻辑与主仓库完全一致。
+- 单仓库出星空包时显式指定仓库：`node scripts/build-release.mjs --theme=star --repository=holytreasure/ycms-star`。
+
 > 主题包内文件顺序与时间戳固定，同内容 sha256 稳定，可用于完整性校验。
-> 开源版只内置 `default` 一个主题，主题在线安装/切换属于商业版能力。
+> 开源版随仓库附带 `default` 与 `star` 两套主题源码，站点根入口固定由 `default` 接管；主题在线安装/切换属于商业版能力。
 
 ---
 

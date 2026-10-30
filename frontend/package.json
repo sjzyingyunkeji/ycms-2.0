@@ -5,11 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:star": "vite --mode star",
     "dev:admin": "vite --mode admin",
-    "build": "npm run build:site && npm run build:admin",
+    "build": "node scripts/build-themes.mjs && npm run build:admin",
     "build:site": "node scripts/clean-site-assets.mjs && vite build --mode site",
+    "build:star": "node scripts/clean-site-assets.mjs --src=star && vite build --mode star",
     "build:admin": "vite build --mode admin && node scripts/fix-admin-output.mjs",
-    "pack:theme": "npm run build:site && node scripts/pack-theme.mjs",
+    "pack:theme": "npm run build:site && node scripts/pack-theme.mjs --slug=default",
+    "pack:star": "npm run build:star && node scripts/pack-theme.mjs --slug=star",
+    "pack:all": "node scripts/build-themes.mjs && node scripts/pack-theme.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

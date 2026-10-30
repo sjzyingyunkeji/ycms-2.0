@@ -28,8 +28,25 @@ use ZipArchive;
  */
 final class UpdateService
 {
-    /** 默认清单地址（raw 直链，免 API 限流） */
+    /**
+     * 兜底清单地址
+     *
+     * 实际地址由 release-source.json 推导（见 manifestUrl()）；
+     * 该常量仅用于兼容旧调用方与「配置文件缺失」时的默认仓库标识。
+     */
     public const MANIFEST_URL = 'https://raw.githubusercontent.com/sjzyingyunkeji/ycms-2.0/main/update.json';
+
+    /** 发布源配置文件（随包分发，决定去哪个仓库检查更新） */
+    private const SOURCE_FILE = '/release-source.json';
+
+    /** 允许的发行风味 */
+    private const FLAVORS = ['default', 'star'];
+
+    /** 发布源缓存 */
+    private static ?array $sourceCache = null;
+
+    /** 最近一次拉取清单的失败原因（用于后台提示） */
+    private static string $fetchError = '';
 
     /** 检查间隔：24 小时 */
     public const CHECK_INTERVAL = 86400;
@@ -75,6 +92,90 @@ final class UpdateService
     public static function rootDir(): string
     {
         return dirname(__DIR__, 3);
+    }
+
+    /**
+     * 发布源配置（release-source.json）
+     *
+     * 每个仓库各自持有一份：主仓库指向 ycms-2.0，主题仓库指向自己的仓库。
+     * 同一份后端代码因此不用为「两个仓库」写两套升级逻辑，只换地址。
+     *
+     * @return array<string, string>
+     */
+    public static function source(): array
+    {
+        if (self::$sourceCache !== null) {
+            return self::$sourceCache;
+        }
+
+        $defaults = [
+            'repository' => 'sjzyingyunkeji/ycms-2.0',
+            'branch' => 'main',
+            'channel' => 'stable',
+            'flavor' => 'default',
+        ];
+
+        $file = self::rootDir() . self::SOURCE_FILE;
+        $raw = is_file($file) ? json_decode((string) @file_get_contents($file), true) : null;
+        if (!is_array($raw)) {
+            return self::$sourceCache = $defaults;
+        }
+
+        foreach ($defaults as $key => $value) {
+            $current = isset($raw[$key]) ? trim((string) $raw[$key]) : '';
+            $defaults[$key] = $current !== '' ? $current : $value;
+        }
+
+        // 仓库标识必须形如 owner/name，分支只允许安全字符，避免被拼出奇怪的 URL
+        if (preg_match('#^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$#', $defaults['repository']) !== 1) {
+            $defaults['repository'] = 'sjzyingyunkeji/ycms-2.0';
+        }
+        if (preg_match('#^[A-Za-z0-9_.-]+$#', $defaults['branch']) !== 1) {
+            $defaults['branch'] = 'main';
+        }
+        if (!in_array($defaults['flavor'], self::FLAVORS, true)) {
+            $defaults['flavor'] = 'default';
+        }
+
+        return self::$sourceCache = $defaults;
+    }
+
+    /**
+     * 当前发行风味（default / star）
+     */
+    public static function flavor(): string
+    {
+        return self::source()['flavor'];
+    }
+
+    /**
+     * 当前仓库标识（owner/name）
+     */
+    public static function repository(): string
+    {
+        return self::source()['repository'];
+    }
+
+    /**
+     * 更新清单地址（raw 直链，免 API 限流）
+     */
+    public static function manifestUrl(): string
+    {
+        $source = self::source();
+        return 'https://raw.githubusercontent.com/' . $source['repository']
+            . '/' . $source['branch'] . '/update.json';
+    }
+
+    /**
+     * 发行风味的中文名称（用于提示文案）
+     */
+    public static function flavorLabel(string $flavor): string
+    {
+        return match ($flavor) {
+            'star' => '星空版',
+            'default' => '默认版',
+            default => $flavor !== '' ? $flavor . ' 版' : '未知版本',
+        };
     }
 
     /**
@@ -145,7 +246,9 @@ final class UpdateService
                 // 失败后 30 分钟再试，避免网络抖动导致一整天不再检查
                 $state['last_checked'] = time() - self::CHECK_INTERVAL + 1800;
                 $state['last_result'] = 'fail';
-                $state['last_error'] = '无法获取更新清单（网络受限或仓库不可达）';
+                $state['last_error'] = self::$fetchError !== ''
+                    ? self::$fetchError
+                    : '无法获取更新清单（网络受限或仓库不可达）';
                 self::saveState($state);
                 return self::summary($state);
             }
@@ -188,6 +291,9 @@ final class UpdateService
 
         return [
             'current' => $current,
+            'flavor' => self::flavor(),
+            'flavor_label' => self::flavorLabel(self::flavor()),
+            'repository' => self::repository(),
             'latest' => $latest,
             'has_update' => version_compare($latest, $current, '>'),
             'channel' => is_array($manifest) ? (string) ($manifest['channel'] ?? 'stable') : 'stable',
@@ -221,16 +327,27 @@ final class UpdateService
      */
     private static function fetchManifest(): ?array
     {
-        $urls = self::mirrorUrls(self::MANIFEST_URL);
+        self::$fetchError = '';
+        $urls = self::mirrorUrls(self::manifestUrl());
         foreach ($urls as $url) {
             $body = self::httpGet($url, 8);
             if ($body === null) {
                 continue;
             }
             $data = json_decode($body, true);
-            if (is_array($data) && isset($data['latest'])) {
-                return $data;
+            if (!is_array($data) || !isset($data['latest'])) {
+                continue;
             }
+
+            // 风味校验：默认版站点不能升级成星空版包，反之亦然
+            $flavor = trim((string) ($data['flavor'] ?? ''));
+            if ($flavor !== '' && $flavor !== self::flavor()) {
+                self::$fetchError = '更新清单属于' . self::flavorLabel($flavor)
+                    . '，当前站点是' . self::flavorLabel(self::flavor()) . '，已拒绝跨风味升级';
+                continue;
+            }
+
+            return $data;
         }
         return null;
     }
@@ -425,6 +542,13 @@ final class UpdateService
             return self::fail('离线包缺少 manifest.json 或格式错误，请联系发布方');
         }
 
+        // 风味校验：两条发行线互不覆盖（默认版 / 星空版）
+        $packageFlavor = trim((string) ($info['flavor'] ?? ''));
+        if ($packageFlavor !== '' && $packageFlavor !== self::flavor()) {
+            return self::fail('这是' . self::flavorLabel($packageFlavor) . '的升级包，当前站点是'
+                . self::flavorLabel(self::flavor()) . '，请下载对应版本的升级包');
+        }
+
         $target = self::tmpDir() . '/package.zip';
         @unlink($target);
         if (!@rename($uploadedPath, $target) && !@copy($uploadedPath, $target)) {
@@ -437,6 +561,7 @@ final class UpdateService
         $state = self::state();
         $state['manifest'] = [
             'latest' => $version !== '' ? $version : self::currentVersion(),
+            'flavor' => self::flavor(),
             'channel' => 'offline',
             'published_at' => date('c'),
             'changelog' => ['离线包：' . ($filename !== '' ? $filename : basename($uploadedPath))],

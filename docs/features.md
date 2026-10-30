@@ -296,10 +296,12 @@ download → extract → backup → apply → migrate → finalize
 
 | UI | 样式文件 | 外观 | 使用位置 |
 | --- | --- | --- | --- |
-| 通用 UI（默认） | `frontend/shared/styles/ui.css` | 浅色中性灰阶 + 单一主色靛蓝，白底细描边分层，圆角统一 | 前台、后台、登录页、安装页 |
-| 星空 UI | `frontend/shared/styles/star.css` | 深色底、玻璃磨砂、紫青极光、星光发光 | 独立星空主题仓库 |
+| 通用 UI（默认） | `frontend/shared/styles/ui.css` | 浅色中性灰阶 + 单一主色靛蓝，白底细描边分层，圆角统一 | 默认主题 `frontend/site`、后台、登录页、安装页 |
+| 星空 UI | `frontend/shared/styles/star.css` | 深色底、玻璃磨砂、紫青极光、星光发光 | 星空主题 `frontend/star` |
 
-共享组件（`Pagination` / `EmptyState` / `LoadingSpinner` / `MarkdownView` / `BaseModal`）通过 `variant` 属性切换外观，前台显式传 `flat`，星空主题传 `star`。
+共享组件（`Pagination` / `EmptyState` / `LoadingSpinner` / `MarkdownView` / `BaseModal`）通过 `variant` 属性切换外观，默认主题显式传 `flat`，星空主题传 `star`。
+
+两套前台主题源码各自独立（`frontend/site` 与 `frontend/star`），构建产物分别落到 `public/themes/default/` 与 `public/themes/star/`；仅默认主题接管站点根入口，星空主题不覆盖默认 UI。
 
 ### 11.2 主题目录契约
 

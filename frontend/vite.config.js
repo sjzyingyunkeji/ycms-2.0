@@ -17,13 +17,32 @@ import { fileURLToPath } from 'node:url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const PUBLIC_DIR = path.resolve(__dirname, '../public')
 const ADMIN_DIR = path.resolve(__dirname, 'admin')
-const SITE_DIR = path.resolve(__dirname, 'site')
 const BACKEND_STORAGE = path.resolve(__dirname, '../backend/storage')
 
-// 内置主题元数据：slug 决定产物目录 /themes/<slug>/ 与资源前缀
-const themeMeta = JSON.parse(readFileSync(path.join(SITE_DIR, 'theme.json'), 'utf8'))
-const THEME_SLUG = String(themeMeta.slug || 'default')
-const THEME_OUT_DIR = path.join(PUBLIC_DIR, 'themes', THEME_SLUG)
+// 主题源码注册表：目录名即构建模式名（site → 默认主题，star → 星空主题）
+// 只注册本仓库真实存在的主题，因此主仓库与星空仓库共用同一份构建配置，无需分叉
+const THEME_DIRS = ['site', 'star']
+const THEME_SOURCES = Object.fromEntries(
+  THEME_DIRS
+    .map((dir) => [dir, path.resolve(__dirname, dir)])
+    .filter(([, srcDir]) => existsSync(path.join(srcDir, 'theme.json'))),
+)
+const DEFAULT_THEME_MODE = THEME_SOURCES.site ? 'site' : THEME_SOURCES.star ? 'star' : 'site'
+
+/**
+ * 解析主题元数据：slug 决定产物目录 /themes/<slug>/ 与资源前缀
+ * @param {string} mode vite 构建模式（site / star），未命中时回退到本仓库的默认主题
+ */
+function resolveTheme(mode) {
+  const key = THEME_SOURCES[mode] ? mode : DEFAULT_THEME_MODE
+  const srcDir = THEME_SOURCES[key]
+  if (!srcDir) {
+    throw new Error('未找到任何主题源码：frontend/site 或 frontend/star 至少存在一个')
+  }
+  const meta = JSON.parse(readFileSync(path.join(srcDir, 'theme.json'), 'utf8'))
+  const slug = String(meta.slug || 'default')
+  return { srcDir, slug, outDir: path.join(PUBLIC_DIR, 'themes', slug) }
+}
 
 // 发行版本（条件编译）：oss = 开源产物，pro = 商业产物
 // 构建时通过常量替换，未命中分支会被 Rollup 静态消除，产物中不留 Pro 代码
@@ -71,32 +90,40 @@ const storagePlugin = {
 
 /**
  * 主题构建收尾（零配置部署的关键）：
- *   1. 把主题外壳 index.html 复制为站点根入口 public/index.html
- *   2. 把 theme.json 与 SSR 模板一并放进主题目录，形成可独立安装的主题包结构
+ *   1. 把 theme.json 与 SSR 模板、预览图一并放进主题目录，形成可独立安装的主题包结构
+ *   2. 默认主题（default）额外把外壳复制为站点根入口 public/index.html；
+ *      其他主题（如 star）只落到 public/themes/<slug>/，不覆盖站点根入口
  */
-function themeActivatePlugin(slug) {
+function themeActivatePlugin({ srcDir, slug, outDir }) {
   return {
     name: 'ycms-theme-activate',
     apply: 'build',
     async closeBundle() {
-      const shell = path.join(THEME_OUT_DIR, 'index.html')
+      const shell = path.join(outDir, 'index.html')
       if (!existsSync(shell)) {
         this.warn('未找到主题外壳 index.html，跳过激活复制')
         return
       }
-      await mkdir(PUBLIC_DIR, { recursive: true })
-      await copyFile(shell, path.join(PUBLIC_DIR, 'index.html'))
-      await copyFile(path.join(SITE_DIR, 'theme.json'), path.join(THEME_OUT_DIR, 'theme.json'))
-      const tplDir = path.join(SITE_DIR, 'templates')
+      await copyFile(path.join(srcDir, 'theme.json'), path.join(outDir, 'theme.json'))
+
+      const tplDir = path.join(srcDir, 'templates')
       if (existsSync(tplDir)) {
-        await cp(tplDir, path.join(THEME_OUT_DIR, 'templates'), { recursive: true })
+        await cp(tplDir, path.join(outDir, 'templates'), { recursive: true })
       }
+
       // 主题预览图（主题包/主题市场展示用，可选）
-      const preview = path.join(SITE_DIR, 'preview.jpg')
+      const preview = path.join(srcDir, 'preview.jpg')
       if (existsSync(preview)) {
-        await copyFile(preview, path.join(THEME_OUT_DIR, 'preview.jpg'))
+        await copyFile(preview, path.join(outDir, 'preview.jpg'))
       }
-      console.log(`theme [${slug}] → ${path.relative(path.resolve(__dirname, '..'), THEME_OUT_DIR)}`)
+
+      // 仅默认主题接管站点根入口，避免多主题构建互相覆盖
+      if (slug === 'default') {
+        await mkdir(PUBLIC_DIR, { recursive: true })
+        await copyFile(shell, path.join(PUBLIC_DIR, 'index.html'))
+      }
+
+      console.log(`theme [${slug}] → ${path.relative(path.resolve(__dirname, '..'), outDir)}`)
     },
   }
 }
@@ -110,14 +137,16 @@ function themeActivatePlugin(slug) {
 export default defineConfig(({ mode, command }) => {
   const isAdmin = mode === 'admin'
   const isDev = command === 'serve'
-  const root = isAdmin ? ADMIN_DIR : SITE_DIR
-  const themeBase = `/themes/${THEME_SLUG}/`
+  // 前台构建按模式选择主题源码：site → 默认主题，star → 星空主题
+  const theme = isAdmin ? null : resolveTheme(mode)
+  const root = isAdmin ? ADMIN_DIR : theme.srcDir
+  const themeBase = theme ? `/themes/${theme.slug}/` : '/admin/'
 
   return {
     root,
     publicDir: path.resolve(__dirname, 'public'),
     base: isAdmin ? '/admin/' : isDev ? '/' : themeBase,
-    plugins: [vue(), storagePlugin, ...(isAdmin ? [] : [themeActivatePlugin(THEME_SLUG)])],
+    plugins: [vue(), storagePlugin, ...(isAdmin ? [] : [themeActivatePlugin(theme)])],
     define: {
       __YCMS_EDITION__: JSON.stringify(EDITION),
     },
@@ -141,7 +170,7 @@ export default defineConfig(({ mode, command }) => {
       },
     },
     build: {
-      outDir: isAdmin ? path.join(PUBLIC_DIR, 'admin') : THEME_OUT_DIR,
+      outDir: isAdmin ? path.join(PUBLIC_DIR, 'admin') : theme.outDir,
       emptyOutDir: true,
       chunkSizeWarningLimit: 1500,
       rollupOptions: {

@@ -1,6 +1,8 @@
 {
-    "generated_at": "2026-10-29T16:06:25.232Z",
+    "generated_at": "2026-10-30T14:40:01.120Z",
     "core_version": "2.0.1",
+    "repository": "sjzyingyunkeji/ycms-2.0",
+    "flavor": "default",
     "themes": {
         "default": {
             "slug": "default",
@@ -14,8 +16,8 @@
             },
             "preview": "preview.jpg",
             "package": "ycms-theme-default-2.0.1.zip",
-            "size": 440437,
-            "sha256": "90275f71d4abb453ad3a86c4bbaf373ce700866dab9502763ba8c8ac6ff9a7cd",
+            "size": 441425,
+            "sha256": "0c24e0c728d0344e7cb1474a152b4c553be78b1e3b758f1f7cb26be3827e8a1e",
             "url": "https://github.com/sjzyingyunkeji/ycms-2.0/releases/download/v2.0.1/ycms-theme-default-2.0.1.zip"
         }
     }
