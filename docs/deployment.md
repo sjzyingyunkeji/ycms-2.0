@@ -366,7 +366,7 @@ public/
 cd frontend
 npm run pack:theme        # 构建默认主题后打包，零第三方依赖
 npm run pack:star         # 构建星空主题后打包
-npm run pack:all          # 两套主题一起打包
+npm run pack:all          # 打包本仓库全部主题
 ```
 
 产出：
@@ -401,7 +401,7 @@ node scripts/build-release.mjs --edition=oss --theme=default
 - 单仓库出星空包时显式指定仓库：`node scripts/build-release.mjs --theme=star --repository=holytreasure/ycms-star`。
 
 > 主题包内文件顺序与时间戳固定，同内容 sha256 稳定，可用于完整性校验。
-> 开源版随仓库附带 `default` 与 `star` 两套主题源码，站点根入口固定由 `default` 接管；主题在线安装/切换属于商业版能力。
+> 主题源码按仓库拆分：主仓库只含默认主题 `frontend/site`，星空版仓库只含 `frontend/star`；站点根入口由本仓库唯一主题接管，主题在线安装/切换属于商业版能力。
 
 ---
 
