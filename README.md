@@ -94,7 +94,7 @@ npm run dev
 #   后台：http://localhost:5173/admin/
 npm run dev:star
 #   前台（星空主题）：http://localhost:5173/
-#   两套主题端口相同，需要同时预览时追加 -- --port 5174
+#   同一端口，需要同时预览多主题时追加 -- --port 5174
 ```
 
 构建产物输出到项目根目录的 `public/`：
@@ -107,7 +107,7 @@ npm run build:star     # 仅星空主题 → public/themes/star/（不占用站�
 npm run build:admin    # 仅后台 → public/admin/
 npm run pack:theme     # 默认主题打包 → release/themes/*.zip + themes.json
 npm run pack:star      # 星空主题打包
-npm run pack:all       # 两套主题一起构建并打包，清单保留全部条目
+npm run pack:all       # 构建并打包本仓库全部主题，清单按 slug 合并
 ```
 
 ### 访问
@@ -229,7 +229,7 @@ npm run pack:all       # 两套一起（清单同时保留 default 与 star）
 | `update.json` 的 `themes` 字段 | 在线更新读取的主题摘要 |
 
 > 包内文件顺序与时间戳固定，内容相同则 sha256 稳定，便于校验与差分。
-> 开源版随仓库附带 `default` 与 `star` 两套主题源码，站点根入口固定由 `default` 接管；主题在线安装与运行时切换为商业版能力。
+> 主题源码按仓库拆分：主仓库只含默认主题 `frontend/site`，星空版仓库只含 `frontend/star`；站点根入口由本仓库唯一主题接管，主题在线安装与运行时切换为商业版能力。
 > `themes.json` 按 slug 合并写入，单主题打包不会抹掉另一套主题的条目。
 
 ### 单主题发行包（各自带全套后端）
@@ -338,7 +338,7 @@ php backend/tools/theme.php migrate default
 - **PHP 8.2+**：`declare(strict_types=1)`、构造器属性提升、`readonly`、`match`、命名参数、`never` 返回类型
 - **SQLite**：PDO + WAL 模式 + 外键约束，备份只需复制 `storage/database.sqlite`
 - **静态化**：`StaticBuilder` 全量重建列表页与文章页，`/post/{slug}` 由 PHP 服务端渲染首屏，SEO 与首屏速度兼顾
-- **构建分层**：`frontend/core`（与主题无关）+ `shared`（通用组件与样式）+ `admin`（后台入口）+ `site`（默认主题）+ `star`（星空主题），Vite 多模式独立构建
+- **构建分层**：`frontend/core`（与主题无关）+ `shared`（通用组件与样式）+ `admin`（后台入口）+ 主题目录（`site` 默认主题 / `star` 星空主题），Vite 多模式独立构建，构建时按仓库实际存在的主题自动遍历
 - **条件编译**：`YCMS_EDITION=pro` 时注入商业版分支，开源产物中不含 Pro 代码
 
 ## 生产部署
