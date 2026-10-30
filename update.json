@@ -4,35 +4,17 @@
     "channel": "stable",
     "min_version": "2.0.0",
     "min_php": "8.2",
-    "published_at": "2026-10-28T23:55:43+08:00",
+    "published_at": "2026-10-30T23:35:28+08:00",
     "changelog": [
-        "访问统计：全站 PV/UV、热门文章、来源与设备分布",
-        "SEO：服务端渲染文章页、sitemap、robots、相关文章内链",
-        "前后台独立构建，互不影响",
-        "一键安装向导 + 零配置部署（无需 Nginx 重写规则）",
-        "媒体库上传自动压缩与拖拽上传",
-        "在线升级：多镜像下载 + sha256/签名校验 + 分步升级与回滚",
-        "安全加固：会话鉴权、同源 CSRF 校验、slug 路径穿越防护、SVG 上传拦截",
-        "文档与界面截图统一整理至 docs/ 目录"
+        "默认版 2.0.1"
     ],
     "breaking": false,
     "changelog_url": "",
     "package": {
         "url": "https://github.com/sjzyingyunkeji/ycms-2.0/releases/download/v2.0.1/ycms-2.0.1.zip",
         "mirrors": [],
-        "size": 373869,
-        "sha256": "02b6948807cec37e18bb461ed844a26028bd7445235e4fea448b96e8c28401f4",
-        "signature": "39GEf64atyI0UpozdThiStt6V01+5UrORH9m+wxU71MEb8z2upuIC9EP8cIP/bEQHmY1nQ236cXW+21SNuIVDw=="
-    },
-    "themes": {
-        "default": {
-            "latest": "2.0.1",
-            "package": "ycms-theme-default-2.0.1.zip",
-            "size": 441425,
-            "sha256": "0c24e0c728d0344e7cb1474a152b4c553be78b1e3b758f1f7cb26be3827e8a1e",
-            "requires": {
-                "core": ">=2.0.1"
-            }
-        }
+        "size": 706949,
+        "sha256": "ed946f49f6e055cbe1ac5481568098f80b7d1618bbe21ca5e68446436521d763",
+        "signature": "gocU/v88fdLx7Z5bi511fYNBzFJ9ksKd+3rCJRRoqKz4UzEsQApFzvEOyjusRpawYPZcpJTtfIvIhYDJrNN6Dg=="
     }
 }
