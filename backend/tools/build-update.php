@@ -28,7 +28,8 @@ declare(strict_types=1);
  *   --channel=stable       更新渠道
  *   --min_version=2.0.0    允许直接升级的最低版本
  *   --breaking=1           标记为重要变更
- *   --url=地址              升级包下载地址（默认 GitHub Release 地址）
+ *   --url=地址              升级包下载地址（默认按 release-source.json 的仓库推导）
+ *   --flavor=default|star  发行风味（默认读 release-source.json，决定包名与清单标记）
  *   --mirrors=a,b           额外镜像前缀，逗号分隔
  *   --notes=文本            更新日志，用 | 分隔多条（默认读取 update-notes.txt）
  *   --full=1               同时生成可全新安装的包（保留 install.php）
@@ -85,6 +86,47 @@ function fail(string $message): never
     exit(1);
 }
 
+/**
+ * 读取发布源配置（仓库 / 分支 / 风味）
+ *
+ * 与 UpdateService::source() 同一份文件、同一套派生规则：
+ * 主仓库与主题仓库各持一份 release-source.json，其余逻辑完全共用。
+ *
+ * @return array{repository: string, branch: string, channel: string, flavor: string}
+ */
+function source_config(string $root): array
+{
+    $defaults = [
+        'repository' => 'sjzyingyunkeji/ycms-2.0',
+        'branch' => 'main',
+        'channel' => 'stable',
+        'flavor' => 'default',
+    ];
+
+    $file = $root . '/release-source.json';
+    $raw = is_file($file) ? json_decode((string) file_get_contents($file), true) : null;
+    if (!is_array($raw)) {
+        return $defaults;
+    }
+
+    foreach ($defaults as $key => $value) {
+        $current = isset($raw[$key]) ? trim((string) $raw[$key]) : '';
+        $defaults[$key] = $current !== '' ? $current : $value;
+    }
+
+    if (preg_match('#^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$#', $defaults['repository']) !== 1) {
+        $defaults['repository'] = 'sjzyingyunkeji/ycms-2.0';
+    }
+    if (preg_match('#^[A-Za-z0-9_.-]+$#', $defaults['branch']) !== 1) {
+        $defaults['branch'] = 'main';
+    }
+    if (!in_array($defaults['flavor'], ['default', 'star'], true)) {
+        $defaults['flavor'] = 'default';
+    }
+
+    return $defaults;
+}
+
 function generate_keypair(string $root): void
 {
     if (!function_exists('sodium_crypto_sign_keypair')) {
@@ -137,9 +179,15 @@ function build(string $root, array $args): void
         fail('无法创建产物目录：' . $outDir);
     }
 
-    $zipName = 'ycms-' . $version . '.zip';
+    $source = source_config($root);
+    $flavor = (string) ($args['flavor'] ?? $source['flavor']);
+    $zipName = 'ycms-' . $version . '-' . $flavor . '.zip';
+    if ($flavor === 'default') {
+        // 默认版沿用历史包名，避免破坏既有下载链接
+        $zipName = 'ycms-' . $version . '.zip';
+    }
     $zipPath = $outDir . '/' . $zipName;
-    $count = build_archive($root, $zipPath, $version, $channel, false);
+    $count = build_archive($root, $zipPath, $version, $channel, $flavor, false);
 
     $sha256 = (string) hash_file('sha256', $zipPath);
     $size = (int) filesize($zipPath);
@@ -175,8 +223,9 @@ function build(string $root, array $args): void
         $publicKey = base64_encode(sodium_crypto_sign_publickey_from_secretkey($secretKey));
     }
 
+    // 下载地址默认由 release-source.json 推导（主仓库 / 主题仓库各自指向自己的 releases）
     $url = (string) ($args['url']
-        ?? 'https://github.com/sjzyingyunkeji/ycms-2.0/releases/download/v' . $version . '/' . $zipName);
+        ?? 'https://github.com/' . $source['repository'] . '/releases/download/v' . $version . '/' . $zipName);
     $mirrors = array_values(array_filter(array_map(
         'trim',
         explode(',', (string) ($args['mirrors'] ?? ''))
@@ -184,6 +233,7 @@ function build(string $root, array $args): void
 
     $release = [
         'latest' => $version,
+        'flavor' => $flavor,
         'channel' => $channel,
         'min_version' => (string) ($args['min_version'] ?? '2.0.0'),
         'min_php' => '8.2',
@@ -217,8 +267,9 @@ function build(string $root, array $args): void
 
     // 全新安装包：额外保留 install.php，供新站点从零安装
     if ((string) ($args['full'] ?? '0') === '1') {
-        $installPath = $outDir . '/ycms-' . $version . '-install.zip';
-        $installCount = build_archive($root, $installPath, $version, $channel, true);
+        $installName = 'ycms-' . $version . ($flavor === 'default' ? '' : '-' . $flavor) . '-install.zip';
+        $installPath = $outDir . '/' . $installName;
+        $installCount = build_archive($root, $installPath, $version, $channel, $flavor, true);
         echo '  安装包：' . $installPath . '（' . round((int) filesize($installPath) / 1048576, 2)
             . " MB，{$installCount} 个文件，含 install.php）\n";
     }
@@ -237,7 +288,7 @@ function build(string $root, array $args): void
  *
  * @return int 文件数
  */
-function build_archive(string $root, string $path, string $version, string $channel, bool $full): int
+function build_archive(string $root, string $path, string $version, string $channel, string $flavor, bool $full): int
 {
     @unlink($path);
 
@@ -249,6 +300,7 @@ function build_archive(string $root, string $path, string $version, string $chan
     // 包内版本信息（UpdateService 解压后必须能找到 manifest.json）
     $zip->addFromString('manifest.json', (string) json_encode([
         'version' => $version,
+        'flavor' => $flavor,
         'channel' => $channel,
         'type' => $full ? 'full' : 'update',
         'php' => '>=8.2',
@@ -256,8 +308,10 @@ function build_archive(string $root, string $path, string $version, string $chan
     ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
     $count = 1;
-    // 升级包只带 VERSION 与部署文档；README（含截图）仅随全新安装包
-    $rootFiles = ['VERSION', 'docs/deployment.md'];
+    // 升级包只带 VERSION；README（含截图）仅随全新安装包
+    // release-source.json 必须随包：升级后站点要按新仓库继续检查更新
+    // docs/ 不进包：站点运行不需要它，只会让安装包变大
+    $rootFiles = ['VERSION', 'release-source.json'];
     if ($full) {
         $rootFiles[] = 'README.md';
     }
@@ -268,7 +322,7 @@ function build_archive(string $root, string $path, string $version, string $chan
         }
     }
 
-    foreach (['backend', 'public', 'docs'] as $dir) {
+    foreach (['backend', 'public'] as $dir) {
         $count += add_tree($zip, $root, $dir, $full);
     }
 
@@ -338,13 +392,8 @@ function skip(string $relative, bool $full = false): bool
         return !$full;
     }
 
-    // 内部文档（密钥/签名/发布流程）绝不随包分发
-    if (str_starts_with($relative, 'docs/private/')) {
-        return true;
-    }
-
-    // 界面截图体积较大，只随全新安装包（README 需要），升级包不带
-    if (!$full && str_starts_with($relative, 'docs/screenshots/')) {
+    // 文档目录整枝不随包分发（站点运行不需要）
+    if (str_starts_with($relative, 'docs/')) {
         return true;
     }
 
@@ -359,6 +408,7 @@ function skip(string $relative, bool $full = false): bool
     $prefixes = [
         'backend/storage/',
         'backend/vendor/',
+        // tools/ 含 build-update.php 与 reset-password.php：高危重置工具绝不随包
         'backend/tools/',
         'backend/.env',
         'backend/dev-router.php',

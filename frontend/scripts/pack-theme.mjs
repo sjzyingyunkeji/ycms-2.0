@@ -11,7 +11,7 @@
  *   └── preview.jpg（存在才打）
  *
  * 同时产出：
- *   - 根目录 themes.json（主题清单：版本 / 包名 / sha256 / 体积）
+ *   - 根目录 themes.json（主题清单：版本 / 包名 / sha256 / 体积；按 slug 合并写入）
  *   - 合并写入 update.json 的 themes 字段（旧客户端忽略未知字段，向后兼容）
  *
  * 用法：
@@ -43,6 +43,32 @@ const writeManifest = !args.includes('--no-manifest')
 const urlBase = argOf('url-base').replace(/\/+$/, '')
 
 const coreVersion = readFileSync(path.join(root, 'VERSION'), 'utf8').trim()
+
+/**
+ * 发布源（release-source.json）
+ * 主仓库与主题仓库各持一份，下载地址据此推导，不再写死仓库名。
+ */
+const source = (() => {
+  const fallback = { repository: 'sjzyingyunkeji/ycms-2.0', branch: 'main', flavor: 'default' }
+  const file = path.join(root, 'release-source.json')
+  if (!existsSync(file)) return fallback
+  try {
+    const raw = JSON.parse(readFileSync(file, 'utf8'))
+    const merged = { ...fallback }
+    for (const key of Object.keys(fallback)) {
+      const value = typeof raw[key] === 'string' ? raw[key].trim() : ''
+      if (value) merged[key] = value
+    }
+    if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(merged.repository)) {
+      merged.repository = fallback.repository
+    }
+    if (!['default', 'star'].includes(merged.flavor)) merged.flavor = fallback.flavor
+    return merged
+  } catch {
+    console.warn('! release-source.json 解析失败，回退到主仓库地址')
+    return fallback
+  }
+})()
 
 /* ==================== 极简 zip 写入（deflate，无依赖） ==================== */
 
@@ -211,7 +237,9 @@ if (packed.length === 0) {
 /* ==================== 清单 ==================== */
 
 if (writeManifest) {
-  const themes = {}
+  // 合并语义：只覆盖本次打包的主题，其它主题条目保持原样
+  // （否则 pack:star 会把 default 从清单里抹掉，反之亦然）
+  const themes = { ...manifest.themes }
   for (const item of packed) {
     themes[item.slug] = {
       slug: item.slug,
@@ -227,12 +255,14 @@ if (writeManifest) {
       sha256: item.sha256,
       url: urlBase
         ? `${urlBase}/${item.filename}`
-        : `https://github.com/sjzyingyunkeji/ycms-2.0/releases/download/v${coreVersion}/${item.filename}`,
+        : `https://github.com/${source.repository}/releases/download/v${coreVersion}/${item.filename}`,
     }
   }
   writeFileSync(manifestPath, JSON.stringify({
     generated_at: new Date().toISOString(),
     core_version: coreVersion,
+    repository: source.repository,
+    flavor: source.flavor,
     themes,
   }, null, 4) + '\n', 'utf8')
   console.log(`✓ 主题清单 → themes.json（${Object.keys(themes).length} 个主题）`)

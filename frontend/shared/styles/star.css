@@ -407,3 +407,24 @@
   @apply border border-white/[0.08] px-3 py-2;
 }
 .markdown-body th { @apply bg-white/[0.03] text-slate-200; }
+
+/* ---------- 页面转场（与星空主题路由过渡配套） ---------- */
+.page-enter-active,
+.page-leave-active {
+  transition: all 0.35s ease;
+}
+
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+/* ---------- 移动端导航 chip 选中态 ---------- */
+.chip-active {
+  @apply text-white border-star-violet/50 bg-white/[0.06];
+}

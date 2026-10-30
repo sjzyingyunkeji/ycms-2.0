@@ -52,7 +52,7 @@ final class UpdateController
             'sodium' => function_exists('sodium_crypto_sign_verify_detached'),
             'storage_writable' => is_writable($root . '/backend/storage'),
             'root_writable' => is_writable($root),
-            'manifest_url' => UpdateService::MANIFEST_URL,
+            'manifest_url' => UpdateService::manifestUrl(),
             'installed_at' => (string) ($state['installed_at'] ?? ''),
             'installed_version' => (string) ($state['installed_version'] ?? ''),
             'backups' => UpdateService::backups(),

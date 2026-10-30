@@ -18,10 +18,12 @@
 export default {
   content: [
     './site/index.html',
+    './star/index.html',
     './admin/index.html',
     './core/**/*.{vue,js,ts,jsx,tsx}',
     './shared/**/*.{vue,js,ts,jsx,tsx}',
     './site/**/*.{vue,js,ts,jsx,tsx}',
+    './star/**/*.{vue,js,ts,jsx,tsx}',
     './admin/**/*.{vue,js,ts,jsx,tsx}',
     '../backend/src/**/*.php',
   ],
@@ -55,6 +57,7 @@ export default {
         mono: ['"JetBrains Mono"', '"Cascadia Code"', '"SF Mono"', 'Consolas', '"Courier New"', 'monospace'],
       },
       boxShadow: {
+        glow: '0 0 24px rgba(143, 131, 201, 0.28)',
         'glow-violet': '0 0 18px rgba(143, 131, 201, 0.22)',
         'glow-warm': '0 0 18px rgba(242, 227, 194, 0.16)',
         card: '0 10px 36px rgba(4, 6, 26, 0.45)',
