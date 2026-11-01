@@ -1,23 +1,24 @@
 {
-    "latest": "2.0.1",
+    "latest": "2.0.2",
     "flavor": "default",
     "channel": "stable",
     "min_version": "2.0.0",
     "min_php": "8.2",
-    "published_at": "2026-10-30T23:35:28+08:00",
+    "published_at": "2026-11-02T00:48:36+08:00",
     "changelog": [
-        "默认版 2.0.1",
-        "docs 与重置工具不再进入安装包、升级包",
-        "发布源与发行风味可配置，默认版与星空版互不覆盖"
+        "后台拆分为通用版与星空版双 UI，按仓库形态自动选择构建来源",
+        "后台全局提示统一为 Arco Design Message 规范（顶部居中、图标加文案、3 秒自动关闭）",
+        "修复单主题仓库站点根入口归属，避免前台页面白屏",
+        "版本号升级至 2.0.2"
     ],
     "breaking": false,
     "changelog_url": "",
     "package": {
-        "url": "https://github.com/sjzyingyunkeji/ycms-2.0/releases/download/v2.0.1/ycms-2.0.1.zip",
+        "url": "https://github.com/sjzyingyunkeji/ycms-2.0/releases/download/v2.0.2/ycms-2.0.2.zip",
         "mirrors": [],
-        "size": 706949,
-        "sha256": "ed946f49f6e055cbe1ac5481568098f80b7d1618bbe21ca5e68446436521d763",
-        "signature": "gocU/v88fdLx7Z5bi511fYNBzFJ9ksKd+3rCJRRoqKz4UzEsQApFzvEOyjusRpawYPZcpJTtfIvIhYDJrNN6Dg=="
+        "size": 720807,
+        "sha256": "bd47a243e6b2329a80db507c914d881385096eb5045e905c8f43cf3aeec47deb",
+        "signature": "HExckuS4JgOFoAd6Mc3gNU8QeYgs+eHofLICWoYpSeeJVSbENBwIAvr5fnYKeWUMzNknRSe8uWiGjSSejKhwDA=="
     },
     "themes": {
         "default": {
