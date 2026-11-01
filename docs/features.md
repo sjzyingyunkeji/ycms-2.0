@@ -1,6 +1,6 @@
 # YCMS 2.0 功能与模块说明
 
-> 适用版本：**v2.0.1** · 最后更新：2026-10-29
+> 适用版本：**v2.0.2** · 最后更新：2026-10-29
 > 后端实现：`backend/src/App.php`、`backend/src/Controllers/`、`backend/src/Support/`
 > 前端实现：`frontend/site/`（内置主题）、`frontend/admin/`（后台）、`frontend/core/`（共享逻辑）
 > 接口细节见 [api.md](api.md)，部署步骤见 [deployment.md](deployment.md)

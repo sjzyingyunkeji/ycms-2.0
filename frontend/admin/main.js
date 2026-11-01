@@ -17,8 +17,8 @@ import { createPinia } from 'pinia'
 import AdminApp from './App.vue'
 import '../core/utils/brand.js'
 import router from './router.js'
-// 皮肤由构建期别名决定：主仓库 → ui.css（扁平），星空仓库 → admin-star.css（星空）
-import '@admin-skin'
+// 通用后台：固定使用扁平商务皮肤，与星空版（../admin-star）互相独立
+import '../shared/styles/ui.css'
 
 const app = createApp(AdminApp)
 app.use(createPinia())

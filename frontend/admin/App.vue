@@ -16,7 +16,7 @@
 import { onMounted } from 'vue'
 import { useSiteStore } from '../core/stores/site.js'
 import { useAuthStore } from '../core/stores/auth.js'
-import ToastHost from '../shared/components/ToastHost.vue'
+import MessageHost from './components/MessageHost.vue'
 
 const site = useSiteStore()
 const auth = useAuthStore()
@@ -31,6 +31,7 @@ onMounted(async () => {
 <template>
   <div class="min-h-screen bg-[var(--y-bg)]">
     <router-view />
-    <ToastHost />
+    <!-- 通用后台统一使用 Arco Design 的 Message 提示规范 -->
+    <MessageHost />
   </div>
 </template>

@@ -1,6 +1,6 @@
 # ycms2.0 宝塔面板单站部署指南
 
-> 适用版本：**ycms2.0 v2.0.1** · 前后端 + SQLite 部署在**同一个宝塔站点**下
+> 适用版本：**ycms2.0 v2.0.2** · 前后端 + SQLite 部署在**同一个宝塔站点**下
 
 ---
 
@@ -405,4 +405,4 @@ node scripts/build-release.mjs --edition=oss --theme=default
 
 ---
 
-*文档对应版本 ycms2.0 v2.0.1 · 技术栈 PHP 8.2+ / Vue 3 / SQLite*
+*文档对应版本 ycms2.0 v2.0.2 · 技术栈 PHP 8.2+ / Vue 3 / SQLite*

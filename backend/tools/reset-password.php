@@ -197,7 +197,7 @@ if (isset($_GET['confirm']) && $_GET['confirm'] === 'yes') {
         <?php endif; ?>
 
         <div class="foot">
-            ycms2.0 v2.0.1 · 本文件应存放于项目 tools/ 目录，仅在需要时临时放入运行目录。
+            ycms2.0 v2.0.2 · 本文件应存放于项目 tools/ 目录，仅在需要时临时放入运行目录。
         </div>
     </div>
 </body>

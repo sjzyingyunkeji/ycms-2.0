@@ -165,9 +165,10 @@ const skip = (src) => {
   if (rel.startsWith('frontend')) return true
   if (rel.startsWith('themes/')) return true
   if (rel.startsWith('docs/')) return true
-  if (rel.startsWith('backend/storage/')) return true
-  if (rel.startsWith('backend/vendor/')) return true
-  if (rel.startsWith('public/storage/')) return true
+  // 目录本身也要跳过：storage 在工作副本里可能是 junction/符号链接，复制会因 EPERM 失败
+  if (rel === 'backend/storage' || rel.startsWith('backend/storage/')) return true
+  if (rel === 'backend/vendor' || rel.startsWith('backend/vendor/')) return true
+  if (rel === 'public/storage' || rel.startsWith('public/storage/')) return true
   if (rel.endsWith('.log')) return true
   if (rel === 'backend/.env') return true
   // 高危重置工具不随包分发，忘记密码请在仓库下载（见 README 底部 Q&A）

@@ -73,9 +73,9 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="min-h-screen flex bg-[var(--y-bg)]">
+  <div class="min-h-screen flex relative bg-[var(--y-bg)]">
     <!-- 左侧品牌区（大屏可见） -->
-    <div class="hidden lg:flex w-[46%] xl:w-[42%] flex-col justify-between p-12 bg-[var(--y-surface)] border-r border-[var(--y-border)]">
+    <div class="relative z-10 hidden lg:flex w-[46%] xl:w-[42%] flex-col justify-between p-12 bg-[var(--y-surface)] border-r border-[var(--y-border)]">
       <BrandLogo size="lg" />
 
       <div>
@@ -83,11 +83,11 @@ onMounted(async () => {
           内容管理<br />从这里开始
         </h1>
         <p class="text-sm text-[var(--y-text-secondary)] leading-relaxed max-w-sm">
-          文章、页面、分类、评论与媒体资源，一站式管理。轻量、快速、无冗余依赖。
+          一站式管理您的内容资源，更轻量！更快速！更省心！
         </p>
 
         <ul class="mt-10 space-y-4">
-          <li v-for="item in ['Markdown 写作与草稿管理', '评论审核与内容安全', 'SEO 与站点配置开箱可用']" :key="item" class="flex items-center gap-3 text-sm text-[var(--y-text-secondary)]">
+          <li v-for="item in ['国产开源CMS', '开箱即用', '更轻量！']" :key="item" class="flex items-center gap-3 text-sm text-[var(--y-text-secondary)]">
             <span class="w-5 h-5 rounded-full bg-[var(--y-primary-light)] flex items-center justify-center flex-shrink-0">
               <svg class="w-3 h-3 text-[var(--y-primary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
             </span>
@@ -102,7 +102,7 @@ onMounted(async () => {
     </div>
 
     <!-- 右侧表单区 -->
-    <div class="flex-1 flex items-center justify-center px-5 py-12">
+    <div class="relative z-10 flex-1 flex items-center justify-center px-5 py-12">
       <div class="w-full max-w-[360px] page-enter">
         <!-- 小屏 Logo -->
         <div class="lg:hidden mb-10">
@@ -155,7 +155,7 @@ onMounted(async () => {
 
         <div class="mt-10 flex items-center justify-between text-xs">
           <a href="/" class="text-[var(--y-text-muted)] hover:text-[var(--y-primary)] transition-colors duration-200">← 返回前台</a>
-          <span class="font-mono text-[var(--y-text-disabled)]">v2.0.1</span>
+          <span class="font-mono text-[var(--y-text-disabled)]">v2.0.2</span>
         </div>
       </div>
     </div>

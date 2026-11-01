@@ -38,10 +38,20 @@ function close() {
   <Teleport to="body">
     <Transition name="modal">
       <div v-if="modelValue" class="fixed inset-0 z-[1000] flex items-center justify-center p-4">
-        <div :class="variant === 'star' ? 'bg-space-950/80 backdrop-blur-sm' : 'bg-black/40'" @click="close" />
+        <!-- 遮罩必须铺满视口，否则毛玻璃没有可模糊的背景 -->
+        <div
+          class="absolute inset-0"
+          :class="variant === 'star' ? 'bg-space-950/70 backdrop-blur-md' : 'bg-black/40 backdrop-blur-[2px]'"
+          @click="close"
+        />
         <div
           class="relative w-full p-6"
-          :class="[width, variant === 'star' ? 'glass-medium page-enter' : 'bg-[var(--y-surface)] rounded-[var(--y-radius-card)] border border-[var(--y-border)] shadow-xl']"
+          :class="[
+            width,
+            variant === 'star'
+              ? 'glass-medium page-enter shadow-[0_18px_60px_-20px_rgba(4,6,26,0.85)]'
+              : 'bg-[var(--y-surface)] rounded-[var(--y-radius-card)] border border-[var(--y-border)] shadow-xl',
+          ]"
         >
           <div class="flex items-center justify-between mb-5">
             <h3 class="text-lg font-semibold" :class="variant === 'star' ? 'font-serif text-slate-100' : 'text-[var(--y-text)]'">{{ title }}</h3>

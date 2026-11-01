@@ -1,6 +1,6 @@
 # YCMS 2.0 API 文档
 
-> 适用版本：**v2.0.1** · 最后更新：2026-10-29
+> 适用版本：**v2.0.2** · 最后更新：2026-10-29
 > 后端实现：`backend/src/App.php`（路由）+ `backend/src/Controllers/`（控制器）
 > 前端封装：`frontend/src/api/index.js`
 

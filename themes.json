@@ -1,24 +1,24 @@
 {
-    "generated_at": "2026-10-30T14:40:01.120Z",
-    "core_version": "2.0.1",
+    "generated_at": "2026-11-01T16:27:19.633Z",
+    "core_version": "2.0.2",
     "repository": "sjzyingyunkeji/ycms-2.0",
     "flavor": "default",
     "themes": {
         "default": {
             "slug": "default",
             "name": "默认主题",
-            "version": "2.0.1",
+            "version": "2.0.2",
             "author": "影云网络科技（石家庄）有限公司",
             "description": "YCMS 2.0 内置主题（扁平商务风，Arco Design Vue + 胶囊导航）",
             "license": "AGPL-3.0",
             "requires": {
-                "core": ">=2.0.1"
+                "core": ">=2.0.2"
             },
             "preview": "preview.jpg",
-            "package": "ycms-theme-default-2.0.1.zip",
-            "size": 441425,
-            "sha256": "0c24e0c728d0344e7cb1474a152b4c553be78b1e3b758f1f7cb26be3827e8a1e",
-            "url": "https://github.com/sjzyingyunkeji/ycms-2.0/releases/download/v2.0.1/ycms-theme-default-2.0.1.zip"
+            "package": "ycms-theme-default-2.0.2.zip",
+            "size": 440604,
+            "sha256": "9c89a79a5df77d309170e895d99016e5ae0d73cdd6f42a5433e63cb85eb32842",
+            "url": "https://github.com/sjzyingyunkeji/ycms-2.0/releases/download/v2.0.2/ycms-theme-default-2.0.2.zip"
         }
     }
 }
