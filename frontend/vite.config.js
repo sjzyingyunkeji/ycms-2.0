@@ -48,6 +48,16 @@ function resolveTheme(mode) {
 // 构建时通过常量替换，未命中分支会被 Rollup 静态消除，产物中不留 Pro 代码
 const EDITION = (process.env.YCMS_EDITION || 'oss').toLowerCase() === 'pro' ? 'pro' : 'oss'
 
+// 后台皮肤：星空仓库（只含 star 主题）用星空后台，主仓库用通用扁平 UI。
+// 皮肤差异只体现在 CSS token，后台组件源码全仓共用一份。
+const ADMIN_SKIN = (process.env.YCMS_ADMIN_SKIN || (THEME_SOURCES.star && !THEME_SOURCES.site ? 'star' : 'default')) === 'star'
+  ? 'star'
+  : 'default'
+const ADMIN_SKIN_CSS = path.resolve(
+  __dirname,
+  ADMIN_SKIN === 'star' ? 'shared/styles/admin-star.css' : 'shared/styles/ui.css'
+)
+
 const MIME_MAP = {
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
@@ -149,6 +159,13 @@ export default defineConfig(({ mode, command }) => {
     plugins: [vue(), storagePlugin, ...(isAdmin ? [] : [themeActivatePlugin(theme)])],
     define: {
       __YCMS_EDITION__: JSON.stringify(EDITION),
+      __YCMS_ADMIN_SKIN__: JSON.stringify(ADMIN_SKIN),
+    },
+    resolve: {
+      alias: {
+        // 后台皮肤样式：默认 → ui.css，星空 → admin-star.css（两者都基于同一套组件类）
+        '@admin-skin': ADMIN_SKIN_CSS,
+      },
     },
     css: {
       // root 指向 site/ 或 admin/，PostCSS/Tailwind 配置仍从 frontend/ 读取

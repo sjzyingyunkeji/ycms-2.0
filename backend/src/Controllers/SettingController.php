@@ -30,6 +30,8 @@ final class SettingController
     public function index(Request $request): void
     {
         $settings = $this->allSettings();
+        // 博主资料存放在用户表，输出时派生到 owner_* / social_* 以保持前台兼容
+        $owner = $this->ownerProfile();
         if (Auth::user($request) === null) {
             // 公开接口过滤敏感项
             $public = [
@@ -38,19 +40,9 @@ final class SettingController
                 'site_description' => $settings['site_description'] ?? '',
                 'site_keywords' => $settings['site_keywords'] ?? '',
                 'site_icp' => $settings['site_icp'] ?? '',
-                'owner_name' => $settings['owner_name'] ?? '',
-                'owner_bio' => $settings['owner_bio'] ?? '',
-                'owner_avatar' => $settings['owner_avatar'] ?? '',
                 'logo_type' => $settings['logo_type'] ?? 'text',
                 'logo_image' => $settings['logo_image'] ?? '',
                 'hero_suffix' => $settings['hero_suffix'] ?? '',
-                'social_github' => $settings['social_github'] ?? '',
-                'social_email' => $settings['social_email'] ?? '',
-                'social_weibo' => $settings['social_weibo'] ?? '',
-                'social_zhihu' => $settings['social_zhihu'] ?? '',
-                'social_csdn' => $settings['social_csdn'] ?? '',
-                'social_wechat' => $settings['social_wechat'] ?? '',
-                'social_wechat_qr' => $settings['social_wechat_qr'] ?? '',
                 'nav_links' => $this->decodeNavLinks($settings['nav_links'] ?? ''),
                 'site_closed' => $settings['site_closed'] ?? '0',
                 'site_closed_message' => $settings['site_closed_message'] ?? '',
@@ -59,10 +51,10 @@ final class SettingController
                 'home_post_sort' => $settings['home_post_sort'] ?? 'hot',
                 'track_enabled' => $settings['track_enabled'] ?? '1',
             ];
-            Response::success($public);
+            Response::success(array_merge($public, $owner));
         }
         $settings['nav_links'] = $this->decodeNavLinks($settings['nav_links'] ?? '');
-        Response::success($settings);
+        Response::success(array_merge($settings, $owner));
     }
 
     /**
@@ -76,14 +68,12 @@ final class SettingController
             Response::error('没有需要更新的设置', 422);
         }
 
+        // 注意：博主资料（昵称/头像/简介/社交账号）不在此处维护，统一走 /api/auth/profile
         $allowedKeys = [
             'site_name', 'site_title', 'site_description', 'site_keywords', 'site_icp',
-            'owner_name', 'owner_bio', 'owner_avatar',
             'logo_type', 'logo_image', 'hero_suffix',
-            'social_github', 'social_email', 'social_weibo', 'social_zhihu', 'social_csdn',
-            'social_wechat', 'social_wechat_qr',
             'nav_links', 'site_closed', 'site_closed_message', 'comment_audit', 'posts_per_page',
-            'home_post_sort', 'track_enabled',
+            'home_post_sort', 'track_enabled', 'antibot_enabled', 'antibot_limit', 'antibot_ban_minutes',
         ];
 
         Database::beginTransaction();
@@ -122,6 +112,17 @@ final class SettingController
                     $value = '1';
                 }
 
+                // 爬虫防护：开关 / 每分钟阈值 / 封禁分钟数
+                if ($key === 'antibot_enabled' && !in_array((string) $value, ['0', '1'], true)) {
+                    $value = '1';
+                }
+                if ($key === 'antibot_limit') {
+                    $value = (string) max(10, min(600, (int) $value));
+                }
+                if ($key === 'antibot_ban_minutes') {
+                    $value = (string) max(1, min(1440, (int) $value));
+                }
+
                 $exists = Database::selectOne('SELECT key FROM settings WHERE key = :key', ['key' => $key]);
                 if ($exists !== null) {
                     Database::update('settings', ['value' => mb_substr((string) $value, 0, 2000), 'updated_at' => now()], 'key = :key', ['key' => $key]);
@@ -142,6 +143,32 @@ final class SettingController
         $result = $this->allSettings();
         $result['nav_links'] = $this->decodeNavLinks($result['nav_links'] ?? '');
         Response::success($result, '设置已保存');
+    }
+
+    /**
+     * 爬虫防护状态（当前封禁列表 + 生效阈值）
+     */
+    public function antibotStatus(Request $request): void
+    {
+        Auth::requireAdmin($request);
+        $settings = $this->allSettings();
+
+        Response::success([
+            'enabled' => ($settings['antibot_enabled'] ?? '1') !== '0',
+            'limit' => (int) ($settings['antibot_limit'] ?? 60),
+            'ban_minutes' => (int) ($settings['antibot_ban_minutes'] ?? 10),
+            'banned' => \App\Support\AntiBot::bannedList(),
+        ]);
+    }
+
+    /**
+     * 清空全部封禁记录
+     */
+    public function clearAntibot(Request $request): void
+    {
+        Auth::requireAdmin($request);
+        $count = \App\Support\AntiBot::clearAll();
+        Response::success(['cleared' => $count], '已解除全部封禁');
     }
 
     /**
@@ -183,5 +210,38 @@ final class SettingController
             }
         }
         return $links;
+    }
+
+    /**
+     * 博主资料（存放在用户表）：取最早创建的账号作为站点博主
+     *
+     * 输出仍使用 owner_* / social_* 键名，前台无需感知数据迁移。
+     * @return array<string, string>
+     */
+    private function ownerProfile(): array
+    {
+        $user = Database::selectOne('SELECT * FROM users ORDER BY id ASC LIMIT 1') ?? [];
+
+        $nickname = trim((string) ($user['nickname'] ?? ''));
+        if ($nickname === '') {
+            $nickname = (string) ($user['username'] ?? '');
+        }
+        $socialEmail = trim((string) ($user['social_email'] ?? ''));
+        if ($socialEmail === '') {
+            $socialEmail = trim((string) ($user['email'] ?? ''));
+        }
+
+        return [
+            'owner_name' => $nickname,
+            'owner_bio' => (string) ($user['bio'] ?? ''),
+            'owner_avatar' => (string) ($user['avatar'] ?? ''),
+            'social_github' => (string) ($user['social_github'] ?? ''),
+            'social_email' => $socialEmail,
+            'social_weibo' => (string) ($user['social_weibo'] ?? ''),
+            'social_zhihu' => (string) ($user['social_zhihu'] ?? ''),
+            'social_csdn' => (string) ($user['social_csdn'] ?? ''),
+            'social_wechat' => (string) ($user['social_wechat'] ?? ''),
+            'social_wechat_qr' => (string) ($user['social_wechat_qr'] ?? ''),
+        ];
     }
 }

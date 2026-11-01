@@ -12,6 +12,11 @@
  * 使用 sendBeacon 上报，避免阻塞页面渲染；上报失败静默忽略
  */
 
+import { API_BASE } from '../api/index.js'
+
+// 与统一接口前缀保持一致：零配置部署下是 /api.php，配置了重写时才是 /api
+const TRACK_URL = `${API_BASE.replace(/\/$/, '')}/track`
+
 const lastAt = new Map()
 
 /**
@@ -38,7 +43,7 @@ export function trackPage(path, postId = null) {
   try {
     if (typeof navigator.sendBeacon === 'function') {
       navigator.sendBeacon(
-        '/api/track',
+        TRACK_URL,
         new Blob([payload], { type: 'application/json' })
       )
       return
@@ -48,7 +53,7 @@ export function trackPage(path, postId = null) {
   }
 
   try {
-    fetch('/api/track', {
+    fetch(TRACK_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: payload,

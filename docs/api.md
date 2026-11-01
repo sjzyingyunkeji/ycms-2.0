@@ -18,7 +18,15 @@ YCMS 采用「前端静态文件 + PHP JSON 接口」的同源架构，接口路
 | 配置了 URL 重写 | `https://your-domain.com/api` |
 | 本地开发 | `http://127.0.0.1:8080/api.php` |
 
-本文所有示例均以零配置形式书写：`/api.php/posts`。
+> **路径如何读**：下文章节中的 `/api/xxx` 是**路由路径**，真实请求地址 = Base URL + `/xxx`。
+>
+> | 文档中的路由 | 零配置部署（默认） | 配置了 `/api` 重写 |
+> | --- | --- | --- |
+> | `/api/track` | `POST /api.php/track` | `POST /api/track` |
+> | `/api/posts` | `GET /api.php/posts` | `GET /api/posts` |
+> | `/api/auth/login` | `POST /api.php/auth/login` | `POST /api/auth/login` |
+>
+> 也就是说：**没配重写时直接访问 `/api/track` 会 404**，请改用 `/api.php/track`；需要短地址请按 `docs/deployment.md` 的可选重写片段配置（Nginx 用 `location ^~ /api/`，Apache 用 `.htaccess`）。前端已统一走 `API_BASE`（默认 `/api.php`），无需改动。
 
 ### 1.2 请求格式
 
@@ -216,8 +224,22 @@ CORS_ALLOWED_ORIGINS=https://front.example.com,https://admin.example.com
 **PUT /api/auth/profile**
 
 ```json
-{ "nickname": "星尘", "email": "me@example.com", "bio": "写代码，也拍星星", "avatar": "/storage/uploads/202610/avatar.jpg" }
+{
+  "nickname": "星尘",
+  "email": "me@example.com",
+  "bio": "写代码，也拍星星",
+  "avatar": "/storage/uploads/202610/avatar.jpg",
+  "social_github": "https://github.com/xxx",
+  "social_email": "me@example.com",
+  "social_weibo": "https://weibo.com/xxx",
+  "social_zhihu": "https://zhihu.com/people/xxx",
+  "social_csdn": "https://blog.csdn.net/xxx",
+  "social_wechat": "https://mp.weixin.qq.com/xxx",
+  "social_wechat_qr": "/storage/uploads/202610/wechat-qr.png"
+}
 ```
+
+博主信息（昵称 / 头像 / 简介 / 7 个社交账号）统一在此维护：链接类只接受 `http(s)://`，头像与二维码额外接受 `/` 开头的站内路径，其余值会被清空。`GET /api/settings` 会把这些字段派生为 `owner_*` / `social_*` 输出，前台无需改动。
 
 **PUT /api/auth/password**
 
@@ -308,6 +330,10 @@ CORS_ALLOWED_ORIGINS=https://front.example.com,https://admin.example.com
 - `author_name`：作者昵称
 - `tags`：`[{id,name,slug}]`
 - `comment_count`：已审核评论数
+
+> **列表不含正文**：`GET /api/posts` 只返回 `id/title/slug/summary/cover_image/category_id/author_id/status/is_top/allow_comment/views/published_at/created_at/updated_at` 与上述追加字段，`content` 仅在 `GET /api/posts/{id}` 返回，避免列表把整库正文一次性吐给前端。
+>
+> **摘要自动生成**：`summary` 留空时后端会从正文剥离 Markdown 语法后截取 160 字写入；历史文章在首次被列表/详情读取时自动补齐一次。
 
 **POST /api/posts** / **PUT /api/posts/{id}**
 
@@ -498,13 +524,34 @@ CORS_ALLOWED_ORIGINS=https://front.example.com,https://admin.example.com
 
 ```
 site_name site_title site_description site_keywords site_icp
-owner_name owner_bio owner_avatar
 logo_type logo_image hero_suffix
-social_github social_email social_weibo social_zhihu social_csdn social_wechat social_wechat_qr
 nav_links site_closed site_closed_message comment_audit posts_per_page home_post_sort track_enabled
+antibot_enabled antibot_limit antibot_ban_minutes
 ```
 
 `nav_links` 接受数组或 JSON 字符串。
+
+> **注意**：`owner_name` / `owner_bio` / `owner_avatar` 与 7 个 `social_*` 已从站点设置迁入**用户表**，`GET /api/settings` 仍会派生输出这些键（前台无需改动），但 `PUT /api/settings` 不再接受它们——请改用 `PUT /api/auth/profile` 维护博主信息。
+
+### 5.13 爬虫防护
+
+| 方法 | 路径 | 权限 | 说明 |
+| --- | --- | --- | --- |
+| GET | `/api/settings/antibot` | 管理员 | 当前开关、阈值与封禁列表 |
+| DELETE | `/api/settings/antibot` | 管理员 | 解除全部封禁 |
+
+规则：只统计**匿名**访问的公开接口（`posts` / `categories` / `tags` / `pages` / `comments` / `links` / `settings` / `track` / `health` / `auth/setup-status`），按 IP 每分钟计数，超过 `antibot_limit`（默认 60）后封禁 `antibot_ban_minutes`（默认 10）分钟，返回 `429` 并带 `Retry-After`。后台登录态不参与统计，避免误伤编辑器。
+
+**GET /api/settings/antibot** 响应：
+
+```json
+{
+  "enabled": true,
+  "limit": 60,
+  "ban_minutes": 10,
+  "banned": [{ "ip": "1.2.3.4", "hits": 0, "window_start": 1793537600, "banned_until": 1793538200 }]
+}
+```
 
 ### 5.13 系统维护与更新
 

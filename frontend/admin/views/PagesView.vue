@@ -43,8 +43,12 @@ async function confirmDelete() {
 }
 
 function preview(page) {
-  const url = router.resolve({ name: 'page', params: { slug: page.slug } }).href
-  window.open(url, '_blank')
+  if (!page?.slug) {
+    showToast('该页面缺少别名，无法预览', 'warning')
+    return
+  }
+  // 前台页面路由在 site 入口（/page/:slug），后台 router 里没有同名路由，不能 resolve
+  window.open(`/page/${encodeURIComponent(page.slug)}/`, '_blank', 'noopener')
 }
 
 function formatDate(dateStr) {

@@ -1,0 +1,225 @@
+/**
+ * 星空后台皮肤（dark space）
+ * ------------------------------------------------------------
+ * 复用通用 UI 的组件结构（.y-card / .y-btn / .y-input / .y-table ...），
+ * 只覆写设计 token 与少量质感，因此后台视图无需为星空版单独维护一套。
+ *
+ * 配色取自星空主题发行版后台产物：
+ *   space-950 #04061a / violet #8f83c9 / cyan #6fa9bd / gold #c9a86a
+ *
+ * 注意：本文件不使用 @layer 包裹。Tailwind 只会处理含 @tailwind 指令的
+ * 入口文件里的 @layer，此处包裹会被丢弃；不包裹的普通规则优先级高于
+ * ui.css 中 @layer components/base 里的同名规则，正好实现「只换皮」。
+ */
+
+@import './ui.css';
+
+/* ============ Design Tokens（覆写通用 UI 变量） ============ */
+:root {
+  color-scheme: dark;
+
+  --star-violet: #8f83c9;
+  --star-violet-deep: #6f63ad;
+  --star-cyan: #6fa9bd;
+  --star-cyan-deep: #4f8a9e;
+  --star-glow: #aeb8d9;
+  --star-gold: #c9a86a;
+  --star-warm: #f2e3c2;
+  --star-dim: #5b6478;
+  --space-950: #04061a;
+
+  --y-primary: #8f83c9;
+  --y-primary-hover: #a396d8;
+  --y-primary-active: #6f63ad;
+  --y-primary-light: rgba(143, 131, 201, 0.16);
+
+  --y-bg: #04061a;
+  --y-surface: rgba(255, 255, 255, 0.04);
+  --y-surface-hover: rgba(255, 255, 255, 0.08);
+  --y-surface-sunken: rgba(4, 6, 26, 0.6);
+  --y-border: rgba(255, 255, 255, 0.08);
+  --y-border-strong: rgba(255, 255, 255, 0.16);
+
+  --y-text: #e6ebf5;
+  --y-text-secondary: #cbd5e1;
+  --y-text-muted: #8b93a7;
+  --y-text-disabled: #525a6b;
+
+  --y-success: #6fa9bd;
+  --y-success-light: rgba(111, 169, 189, 0.16);
+  --y-warning: #c9a86a;
+  --y-warning-light: rgba(201, 168, 106, 0.16);
+  --y-danger: #d98080;
+  --y-danger-light: rgba(217, 128, 128, 0.16);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  color: var(--y-text-secondary);
+  background-color: var(--space-950);
+  background-image:
+    radial-gradient(ellipse 75% 55% at 8% -5%, rgba(111, 99, 173, 0.16), transparent 62%),
+    radial-gradient(ellipse 70% 50% at 92% 12%, rgba(79, 138, 158, 0.13), transparent 62%),
+    radial-gradient(ellipse 85% 55% at 50% 105%, rgba(111, 99, 173, 0.1), transparent 68%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+::selection {
+  background-color: rgba(143, 131, 201, 0.3);
+  color: var(--star-warm);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(4, 6, 26, 0.6);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(143, 131, 201, 0.5), rgba(111, 169, 189, 0.4));
+  border-radius: 6px;
+  border: 2px solid rgba(4, 6, 26, 0.8);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(143, 131, 201, 0.8), rgba(111, 169, 189, 0.65));
+}
+
+/* ============ 组件质感 ============ */
+
+.y-card {
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 2px 12px rgba(4, 6, 26, 0.25);
+}
+
+.y-card-hover:hover {
+  border-color: rgba(143, 131, 201, 0.35);
+  box-shadow: 0 6px 24px rgba(4, 6, 26, 0.45);
+}
+
+.y-input,
+.y-textarea,
+.y-select {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--y-text);
+}
+
+.y-input::placeholder,
+.y-textarea::placeholder {
+  color: var(--star-dim);
+}
+
+.y-input:hover,
+.y-textarea:hover,
+.y-select:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.y-input:focus,
+.y-textarea:focus,
+.y-select:focus {
+  border-color: rgba(143, 131, 201, 0.6);
+  box-shadow: 0 0 0 3px rgba(143, 131, 201, 0.15);
+}
+
+.y-btn-primary {
+  background-image: linear-gradient(135deg, #8f83c9, #6f63ad 60%, #6fa9bd);
+  border-color: transparent;
+  color: #0b0d1c;
+}
+
+.y-btn-primary:hover:not(:disabled) {
+  background-image: linear-gradient(135deg, #a396d8, #7f72bd 60%, #7fb9cb);
+}
+
+.y-btn-secondary {
+  background-color: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--y-text-secondary);
+}
+
+.y-btn-secondary:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--y-text);
+}
+
+.y-nav-item {
+  color: var(--y-text-secondary);
+}
+
+.y-nav-item:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--y-text);
+}
+
+.y-nav-item.is-active {
+  background-image: linear-gradient(90deg, rgba(143, 131, 201, 0.22), rgba(111, 169, 189, 0.08));
+  color: var(--y-text);
+  box-shadow: inset 2px 0 0 var(--star-violet);
+}
+
+.y-nav-group-label {
+  color: var(--star-dim);
+}
+
+.y-table th {
+  color: var(--y-text-muted);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.y-table td {
+  border-color: rgba(255, 255, 255, 0.06);
+  color: var(--y-text-secondary);
+}
+
+.y-table tbody tr:hover td {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.y-stat-value {
+  color: var(--star-warm);
+}
+
+.y-tag-plain {
+  background-color: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--y-text-secondary);
+}
+
+/* ============ 星空专属装饰 ============ */
+
+.star-admin-chrome {
+  background-color: rgba(8, 10, 32, 0.72) !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.star-admin-aurora {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(ellipse 40% 30% at 15% 0%, rgba(143, 131, 201, 0.18), transparent 70%),
+    radial-gradient(ellipse 35% 30% at 85% 10%, rgba(111, 169, 189, 0.14), transparent 70%);
+}
+
+.star-admin-brand-tag {
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: 10px;
+  color: var(--star-violet);
+  border: 1px solid rgba(143, 131, 201, 0.35);
+  background-color: rgba(143, 131, 201, 0.12);
+}

@@ -14,6 +14,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../core/stores/auth.js'
 import { useSiteStore } from '../../core/stores/site.js'
 import BrandLogo from '../../shared/components/BrandLogo.vue'
+import { IS_STAR_ADMIN } from '../../shared/skin.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -94,16 +95,21 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen flex">
+  <div class="min-h-screen flex relative">
+    <!-- 星空皮肤：极光氛围层（仅装饰，不拦截交互） -->
+    <div v-if="IS_STAR_ADMIN" class="star-admin-aurora" aria-hidden="true" />
     <!-- ============ 侧边栏（全尺寸固定，页面滚动时不动） ============ -->
     <aside
       class="fixed inset-y-0 left-0 z-40 w-64 flex flex-col transform transition-transform duration-300 border-r border-[var(--y-border)] bg-[var(--y-surface)]"
-      :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
+      :class="[sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0', IS_STAR_ADMIN ? 'star-admin-chrome' : '']"
     >
       <!-- Logo（文字 / 图片，后台可切换） -->
       <div class="h-16 flex items-center gap-2.5 px-5 border-b border-[var(--y-border)]">
         <BrandLogo size="sm" />
-        <span class="y-tag y-tag-plain !h-[18px] !text-[10px] hidden lg:inline-flex">管理后台</span>
+        <span
+          class="y-tag y-tag-plain !h-[18px] !text-[10px] hidden lg:inline-flex"
+          :class="IS_STAR_ADMIN ? 'star-admin-brand-tag' : ''"
+        >{{ IS_STAR_ADMIN ? 'CONTROL CENTER' : '管理后台' }}</span>
       </div>
 
       <!-- 菜单 -->
@@ -138,7 +144,7 @@ onMounted(() => {
     <div v-if="sidebarOpen" class="fixed inset-0 bg-black/40 z-30 lg:hidden" @click="sidebarOpen = false" />
 
     <!-- ============ 主区域（桌面端为固定侧边栏留出宽度） ============ -->
-    <div class="flex-1 min-w-0 flex flex-col lg:ml-64">
+    <div class="relative z-10 flex-1 min-w-0 flex flex-col lg:ml-64">
       <!-- 高危重置文件警告（登录成功后检测） -->
       <div
         v-if="auth.resetFileExists"
@@ -153,7 +159,10 @@ onMounted(() => {
       </div>
 
       <!-- 顶栏 -->
-      <header class="sticky top-0 z-20 h-16 flex items-center justify-between px-5 border-b border-[var(--y-border)] bg-[var(--y-surface)]">
+      <header
+        class="sticky top-0 z-20 h-16 flex items-center justify-between px-5 border-b border-[var(--y-border)] bg-[var(--y-surface)]"
+        :class="IS_STAR_ADMIN ? 'star-admin-chrome' : ''"
+      >
         <div class="flex items-center gap-4">
           <button class="lg:hidden text-[var(--y-text-secondary)] hover:text-[var(--y-text)] p-2 -ml-2" @click="sidebarOpen = true">
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16" /></svg>

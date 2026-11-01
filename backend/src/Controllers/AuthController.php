@@ -162,18 +162,54 @@ final class AuthController
 
     /**
      * 更新个人资料
+     *
+     * 博主信息（昵称/头像/简介/社交账号）统一在此维护，
+     * 公开设置接口会把它们派生为 owner_* / social_* 供前台展示。
      */
     public function updateProfile(Request $request): void
     {
         $user = Auth::requireUser($request);
+
+        $email = mb_substr(trim((string) $request->input('email', (string) $user['email'])), 0, 120);
+        if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            Response::error('邮箱格式不正确', 422);
+        }
+
         $data = [
             'nickname' => mb_substr(trim((string) $request->input('nickname', (string) $user['nickname'])), 0, 50),
-            'email' => mb_substr(trim((string) $request->input('email', (string) $user['email'])), 0, 120),
+            'email' => $email,
             'bio' => mb_substr((string) $request->input('bio', (string) $user['bio']), 0, 500),
-            'avatar' => mb_substr(trim((string) $request->input('avatar', (string) $user['avatar'])), 0, 500),
+            'avatar' => $this->sanitizeUrl($request->input('avatar', (string) $user['avatar']), true),
         ];
+
+        // 社交账号：链接类只接受 http(s) 或站内绝对路径，二维码允许站内上传路径
+        foreach (['social_github', 'social_weibo', 'social_zhihu', 'social_csdn', 'social_wechat'] as $key) {
+            $data[$key] = $this->sanitizeUrl($request->input($key, (string) ($user[$key] ?? '')), false);
+        }
+        $data['social_wechat_qr'] = $this->sanitizeUrl($request->input('social_wechat_qr', (string) ($user['social_wechat_qr'] ?? '')), true);
+        $socialEmail = trim((string) $request->input('social_email', (string) ($user['social_email'] ?? '')));
+        $data['social_email'] = mb_substr($socialEmail, 0, 120);
+
         Database::update('users', $data, 'id = :id', ['id' => $user['id']]);
         Response::success($this->publicUser(Database::selectOne('SELECT * FROM users WHERE id = :id', ['id' => $user['id']]) ?? $user), '资料已更新');
+    }
+
+    /**
+     * 站外链接只放行 http(s)，站内资源放行 / 开头的绝对路径
+     */
+    private function sanitizeUrl(mixed $value, bool $allowLocalPath): string
+    {
+        $value = trim(mb_substr((string) $value, 0, 500));
+        if ($value === '') {
+            return '';
+        }
+        if (preg_match('#^https?://#i', $value)) {
+            return $value;
+        }
+        if ($allowLocalPath && str_starts_with($value, '/')) {
+            return $value;
+        }
+        return '';
     }
 
     /**

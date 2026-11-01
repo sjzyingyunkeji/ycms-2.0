@@ -26,26 +26,22 @@ const form = ref({
   site_description: '',
   site_keywords: '',
   site_icp: '',
-  owner_name: '',
-  owner_bio: '',
   logo_type: 'text',
   logo_image: '',
   hero_suffix: '',
   site_closed: '0',
   site_closed_message: '',
-  social_github: '',
-  social_email: '',
-  social_weibo: '',
-  social_zhihu: '',
-  social_csdn: '',
-  social_wechat: '',
-  social_wechat_qr: '',
   nav_links: [],
   comment_audit: '1',
   posts_per_page: '10',
   home_post_sort: 'hot',
   track_enabled: '1',
+  antibot_enabled: '1',
+  antibot_limit: '60',
+  antibot_ban_minutes: '10',
 })
+
+const antibot = ref({ banned: [], loaded: false })
 
 function parseNavLinks(value) {
   if (Array.isArray(value)) return value
@@ -97,7 +93,33 @@ async function save() {
   }
 }
 
-onMounted(load)
+async function loadAntibot() {
+  try {
+    antibot.value = await settingApi.antibot()
+  } catch {
+    antibot.value = { banned: [], loaded: false }
+  }
+}
+
+async function clearBans() {
+  try {
+    await settingApi.clearAntibot()
+    showToast('已解除全部封禁', 'success')
+    await loadAntibot()
+  } catch {
+    /* 错误提示由请求拦截器统一处理 */
+  }
+}
+
+function remainingMinutes(until) {
+  const left = Math.ceil((Number(until) * 1000 - Date.now()) / 60000)
+  return left > 0 ? left : 0
+}
+
+onMounted(async () => {
+  await load()
+  await loadAntibot()
+})
 </script>
 
 <template>
@@ -158,6 +180,13 @@ onMounted(load)
             </div>
           </div>
           <div>
+            <label class="flex items-center gap-1.5 text-xs text-[var(--y-text-secondary)] mb-1.5">
+              首页标题后缀
+              <HelpTip text="首页主标题 = 博主昵称 + 此后缀；博主昵称在「个人资料」中维护" />
+            </label>
+            <input v-model="form.hero_suffix" class="y-input" placeholder="如：的个人博客" />
+          </div>
+          <div>
             <label class="block text-xs text-[var(--y-text-secondary)] mb-1.5">站点描述</label>
             <textarea v-model="form.site_description" class="y-input min-h-[80px] resize-y" />
           </div>
@@ -207,77 +236,6 @@ onMounted(load)
               placeholder="站点暂时关闭时向前台访客展示的说明文字"
             />
           </div>
-        </div>
-      </div>
-
-      <!-- 博主信息 -->
-      <div class="y-card p-6 mb-5">
-        <h3 class="text-base text-[var(--y-text)] mb-5 flex items-center gap-2">
-          <span class="w-1 h-4 rounded-full bg-[var(--y-primary)]" />
-          博主信息
-        </h3>
-        <div class="space-y-4">
-          <div class="grid sm:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-xs text-[var(--y-text-secondary)] mb-1.5">博主昵称</label>
-              <input v-model="form.owner_name" class="y-input" />
-            </div>
-            <div>
-              <label class="flex items-center gap-1.5 text-xs text-[var(--y-text-secondary)] mb-1.5">
-                首页标题后缀
-                <HelpTip text="首页主标题 = 博主昵称 + 此后缀" />
-              </label>
-              <input v-model="form.hero_suffix" class="y-input" placeholder="如：的个人博客" />
-            </div>
-          </div>
-          <div>
-            <label class="block text-xs text-[var(--y-text-secondary)] mb-1.5">个人简介</label>
-            <textarea v-model="form.owner_bio" class="y-input min-h-[80px] resize-y" />
-          </div>
-        </div>
-      </div>
-
-      <!-- 社交账号 -->
-      <div class="y-card p-6 mb-5">
-        <h3 class="text-base text-[var(--y-text)] mb-5 flex items-center gap-2">
-          <span class="w-1 h-4 rounded-full bg-[var(--y-primary)]" />
-          社交账号
-        </h3>
-        <div class="space-y-4">
-          <div class="grid sm:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-xs text-[var(--y-text-secondary)] mb-1.5">GitHub</label>
-              <input v-model="form.social_github" class="y-input" placeholder="https://github.com/..." />
-            </div>
-            <div>
-              <label class="block text-xs text-[var(--y-text-secondary)] mb-1.5">邮箱</label>
-              <input v-model="form.social_email" class="y-input" placeholder="you@example.com" />
-            </div>
-          </div>
-          <div class="grid sm:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-xs text-[var(--y-text-secondary)] mb-1.5">微博</label>
-              <input v-model="form.social_weibo" class="y-input" placeholder="https://weibo.com/..." />
-            </div>
-            <div>
-              <label class="block text-xs text-[var(--y-text-secondary)] mb-1.5">知乎</label>
-              <input v-model="form.social_zhihu" class="y-input" placeholder="https://zhihu.com/people/..." />
-            </div>
-          </div>
-          <div class="grid sm:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-xs text-[var(--y-text-secondary)] mb-1.5">CSDN</label>
-              <input v-model="form.social_csdn" class="y-input" placeholder="https://blog.csdn.net/..." />
-            </div>
-            <div>
-              <label class="block text-xs text-[var(--y-text-secondary)] mb-1.5">微信公众平台（主页链接）</label>
-              <input v-model="form.social_wechat" class="y-input" placeholder="https://mp.weixin.qq.com/..." />
-            </div>
-          </div>
-        </div>
-        <div>
-          <label class="block text-xs text-[var(--y-text-secondary)] mb-1.5">微信二维码图片 URL</label>
-          <input v-model="form.social_wechat_qr" class="y-input" placeholder="二维码图片地址，填写后前台点击微信图标弹出二维码（可先在媒体库上传复制链接）" />
         </div>
       </div>
 
@@ -352,6 +310,69 @@ onMounted(load)
               />
             </button>
           </label>
+        </div>
+      </div>
+
+      <!-- 爬虫防护 -->
+      <div class="y-card p-6 mb-5">
+        <h3 class="text-base text-[var(--y-text)] mb-5 flex items-center gap-2">
+          <span class="w-1 h-4 rounded-full bg-[var(--y-primary)]" />
+          爬虫防护
+        </h3>
+        <div class="space-y-4">
+          <label class="flex items-center justify-between cursor-pointer group">
+            <div>
+              <div class="flex items-center gap-1.5 text-sm text-[var(--y-text-secondary)] group-hover:text-[var(--y-text)] transition-colors duration-300">
+                公开接口限流
+                <HelpTip text="按 IP 统计公开接口（文章、分类、评论、设置、埋点等）的每分钟请求数，超限后临时封禁；后台登录状态不参与统计" width="18rem" />
+              </div>
+              <p class="text-[11px] text-[var(--y-text-muted)] mt-1">针对高频采集与扫描的兜底防护，关闭后不再统计与封禁</p>
+            </div>
+            <button
+              type="button"
+              class="relative w-11 h-6 rounded-full transition-colors duration-300 flex-shrink-0"
+              :class="form.antibot_enabled === '1' ? 'bg-[var(--y-primary)]' : 'bg-[var(--y-surface-hover)]'"
+              @click.prevent="form.antibot_enabled = form.antibot_enabled === '1' ? '0' : '1'"
+            >
+              <span
+                class="absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform duration-300"
+                :class="form.antibot_enabled === '1' ? 'translate-x-5' : 'translate-x-0'"
+              />
+            </button>
+          </label>
+
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs text-[var(--y-text-secondary)] mb-1.5">每分钟请求上限（10-600）</label>
+              <input v-model="form.antibot_limit" type="number" min="10" max="600" class="y-input" />
+            </div>
+            <div>
+              <label class="block text-xs text-[var(--y-text-secondary)] mb-1.5">超限封禁时长（分钟）</label>
+              <input v-model="form.antibot_ban_minutes" type="number" min="1" max="1440" class="y-input" />
+            </div>
+          </div>
+
+          <div class="pt-2">
+            <div class="flex items-center justify-between mb-2">
+              <div class="text-xs text-[var(--y-text-secondary)]">
+                当前封禁 {{ antibot.banned?.length || 0 }} 个 IP
+              </div>
+              <button
+                v-if="antibot.banned?.length"
+                class="y-btn-text y-btn-text-danger"
+                @click="clearBans"
+              >
+                全部解除
+              </button>
+            </div>
+            <div v-if="antibot.banned?.length" class="rounded-lg border border-[var(--y-border)] divide-y divide-[var(--y-border)] max-h-40 overflow-y-auto">
+              <div v-for="item in antibot.banned" :key="item.ip" class="flex items-center justify-between px-3 py-2 text-xs">
+                <span class="font-mono text-[var(--y-text-secondary)]">{{ item.ip }}</span>
+                <span class="text-[var(--y-text-muted)]">剩余 {{ remainingMinutes(item.banned_until) }} 分钟</span>
+              </div>
+            </div>
+            <p v-else class="text-[11px] text-[var(--y-text-muted)]">暂无封禁记录</p>
+          </div>
         </div>
       </div>
 

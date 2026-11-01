@@ -134,19 +134,9 @@ if (INSTALLED) {
                 'site_description' => '一个记录技术、生活与星空的个人站点。',
                 'site_keywords' => 'ycms,技术博客,星空',
                 'site_icp' => '',
-                'owner_name' => $ownerName !== '' ? $ownerName : '站长',
-                'owner_bio' => '热爱技术的开发者，白天写代码，夜晚拍星星。',
-                'owner_avatar' => '',
                 'logo_type' => 'image',
                 'logo_image' => '/logo.svg',
                 'hero_suffix' => '的数字星空',
-                'social_github' => '',
-                'social_email' => '',
-                'social_weibo' => '',
-                'social_zhihu' => '',
-                'social_csdn' => '',
-                'social_wechat' => '',
-                'social_wechat_qr' => '',
                 'nav_links' => '[]',
                 'site_closed' => '0',
                 'site_closed_message' => '站点正在维护升级中，暂时关闭访问，请稍后再来。',
@@ -163,11 +153,12 @@ if (INSTALLED) {
 
             // 3) 管理员
             $pdo->prepare('DELETE FROM users')->execute();
-            $pdo->prepare('INSERT INTO users (username, password_hash, nickname, role, created_at)
-                VALUES (:u, :p, :n, :r, :c)')->execute([
+            $pdo->prepare('INSERT INTO users (username, password_hash, nickname, bio, role, created_at)
+                VALUES (:u, :p, :n, :b, :r, :c)')->execute([
                 'u' => $username,
                 'p' => password_hash($password, PASSWORD_BCRYPT),
                 'n' => $ownerName !== '' ? $ownerName : $username,
+                'b' => '热爱技术的开发者，白天写代码，夜晚拍星星。',
                 'r' => 'admin',
                 'c' => nowStr(),
             ]);

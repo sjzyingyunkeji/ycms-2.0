@@ -44,6 +44,9 @@ final class App
         // CSRF 纵深防御：写请求拒绝跨站来源（Cookie 会话 + SameSite=Lax 之外的第二道锁）
         self::guardCrossSiteRequest($request);
 
+        // 爬虫防护：公开接口按 IP 限流，超阈值临时封禁（后台可开关）
+        \App\Support\AntiBot::guard($request);
+
         $router->dispatch($request);
     }
 
@@ -256,7 +259,7 @@ final class App
 
         if (!$needsInit) {
             // 旧版数据库增量升级：检查新表是否存在（schema.sql 全部为 CREATE TABLE IF NOT EXISTS，可重复执行）
-            foreach (['login_nonces', 'visit_log'] as $table) {
+            foreach (['login_nonces', 'visit_log', 'api_throttle'] as $table) {
                 $row = Database::selectOne(
                     "SELECT name FROM sqlite_master WHERE type = 'table' AND name = :name",
                     ['name' => $table]
@@ -352,6 +355,10 @@ final class App
         // 设置
         $router->get('/api/settings', [\App\Controllers\SettingController::class, 'index']);
         $router->put('/api/settings', [\App\Controllers\SettingController::class, 'update']);
+
+        // 爬虫防护（封禁列表 / 解除封禁）
+        $router->get('/api/settings/antibot', [\App\Controllers\SettingController::class, 'antibotStatus']);
+        $router->delete('/api/settings/antibot', [\App\Controllers\SettingController::class, 'clearAntibot']);
 
         // ============ SEO（服务端渲染，供搜索引擎抓取） ============
         $router->get('/post/{slug}', [\App\Controllers\SeoController::class, 'post']);

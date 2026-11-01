@@ -14,7 +14,7 @@ import { showToast } from '../utils/toast.js'
 
 // 零配置部署：API 走真实文件 /api.php（无需 Nginx 重写规则）
 // 若服务器配置了 /api 重写，也可通过 VITE_API_BASE 切回 /api
-const API_BASE = import.meta.env.VITE_API_BASE || '/api.php'
+export const API_BASE = import.meta.env.VITE_API_BASE || '/api.php'
 
 const request = axios.create({
   baseURL: API_BASE,
@@ -142,6 +142,8 @@ export const linkApi = {
 export const settingApi = {
   get: () => request.get('/settings'),
   update: (settings) => request.put('/settings', { settings }),
+  antibot: () => request.get('/settings/antibot'),
+  clearAntibot: () => request.delete('/settings/antibot'),
 }
 
 export const dashboardApi = {

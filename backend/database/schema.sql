@@ -8,6 +8,13 @@ CREATE TABLE IF NOT EXISTS users (
     nickname TEXT DEFAULT '',
     avatar TEXT DEFAULT '',
     bio TEXT DEFAULT '',
+    social_github TEXT DEFAULT '',
+    social_email TEXT DEFAULT '',
+    social_weibo TEXT DEFAULT '',
+    social_zhihu TEXT DEFAULT '',
+    social_csdn TEXT DEFAULT '',
+    social_wechat TEXT DEFAULT '',
+    social_wechat_qr TEXT DEFAULT '',
     role TEXT NOT NULL DEFAULT 'admin',
     created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
 );
@@ -134,6 +141,15 @@ CREATE TABLE IF NOT EXISTS login_throttle (
 CREATE TABLE IF NOT EXISTS login_nonces (
     nonce TEXT PRIMARY KEY,
     expires_at TEXT NOT NULL
+);
+
+-- 爬虫防护：公开接口按 IP 的分钟级计数与临时封禁
+CREATE TABLE IF NOT EXISTS api_throttle (
+    ip TEXT PRIMARY KEY,
+    hits INTEGER NOT NULL DEFAULT 0,
+    window_start INTEGER NOT NULL DEFAULT 0,
+    banned_until INTEGER NOT NULL DEFAULT 0,
+    updated_at TEXT DEFAULT ''
 );
 
 -- 访问统计日志（全站页面 + 文章详情，含首页）

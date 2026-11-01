@@ -77,8 +77,11 @@ final class PostController
             default => 'p.is_top DESC, COALESCE(p.published_at, p.created_at) DESC',
         };
 
+        // 列表接口只返回摘要字段，正文由详情接口 /api/posts/{id} 提供
         $items = Database::select(
-            "SELECT p.*, c.name AS category_name, u.nickname AS author_name
+            "SELECT p.id, p.title, p.slug, p.summary, p.cover_image, p.category_id, p.author_id,
+                    p.status, p.is_top, p.allow_comment, p.views, p.published_at, p.created_at, p.updated_at,
+                    c.name AS category_name, u.nickname AS author_name
              FROM posts p
              LEFT JOIN categories c ON c.id = p.category_id
              LEFT JOIN users u ON u.id = p.author_id
@@ -87,6 +90,8 @@ final class PostController
              LIMIT :limit OFFSET :offset",
             array_merge($params, ['limit' => $size, 'offset' => ($page - 1) * $size])
         );
+
+        $this->ensureSummaries($items);
 
         foreach ($items as &$item) {
             $item['tags'] = $this->postTags((int) $item['id']);
@@ -121,6 +126,15 @@ final class PostController
             Response::error('文章不存在或未发布', 404);
         }
 
+        // 历史文章没有摘要时，用正文即时补一份（并落库，避免每次重复计算）
+        if (trim((string) ($post['summary'] ?? '')) === '') {
+            $summary = $this->makeSummary((string) $post['content']);
+            if ($summary !== '') {
+                $post['summary'] = $summary;
+                Database::update('posts', ['summary' => $summary], 'id = :id', ['id' => (int) $post['id']]);
+            }
+        }
+
         $post['tags'] = $this->postTags((int) $post['id']);
         $post['comment_count'] = (int) (Database::selectOne(
             "SELECT COUNT(*) AS c FROM comments WHERE post_id = :pid AND status = 'approved'",
@@ -143,6 +157,63 @@ final class PostController
         $post['related_posts'] = $this->relatedPosts((int) $post['id'], $post['category_id']);
 
         Response::success($post);
+    }
+
+    /**
+     * 列表数据补摘要：历史文章还没填摘要时，就地按正文生成并落库（每个条目只会处理一次）
+     *
+     * @param array<int, array<string, mixed>> $items
+     */
+    private function ensureSummaries(array &$items): void
+    {
+        $pending = [];
+        foreach ($items as $item) {
+            if (trim((string) ($item['summary'] ?? '')) === '') {
+                $pending[] = (int) $item['id'];
+            }
+        }
+        if ($pending === []) {
+            return;
+        }
+
+        $placeholders = implode(',', array_fill(0, count($pending), '?'));
+        $rows = Database::select("SELECT id, content FROM posts WHERE id IN ({$placeholders})", $pending);
+
+        $generated = [];
+        foreach ($rows as $row) {
+            $summary = $this->makeSummary((string) $row['content']);
+            if ($summary === '') {
+                continue;
+            }
+            Database::update('posts', ['summary' => $summary], 'id = :id', ['id' => (int) $row['id']]);
+            $generated[(int) $row['id']] = $summary;
+        }
+
+        foreach ($items as &$item) {
+            $id = (int) $item['id'];
+            if (isset($generated[$id])) {
+                $item['summary'] = $generated[$id];
+            }
+        }
+        unset($item);
+    }
+
+    /**
+     * 从正文自动截取摘要（去 Markdown 语法、压缩空白）
+     */
+    private function makeSummary(string $content, int $limit = 160): string
+    {
+        $text = (string) preg_replace('/```[\s\S]*?```/', ' ', $content);       // 代码块
+        $text = (string) preg_replace('/!\[[^\]]*\]\([^)]*\)/', ' ', $text);    // 图片
+        $text = (string) preg_replace('/\[([^\]]*)\]\([^)]*\)/', '$1', $text);  // 链接保留文字
+        $text = (string) preg_replace('/<[^>]+>/', ' ', $text);                 // 内联 HTML
+        $text = (string) preg_replace('/^\s{0,3}#{1,6}\s*/m', '', $text);       // 标题符号
+        $text = (string) preg_replace('/^\s{0,3}>\s?/m', '', $text);            // 引用符号
+        $text = (string) preg_replace('/[*_~`|]/', '', $text);                  // 强调/行内代码/表格
+        $text = (string) preg_replace('/\s+/u', ' ', $text);
+        $text = trim($text);
+
+        return mb_substr($text, 0, $limit);
     }
 
     /**
@@ -333,11 +404,19 @@ final class PostController
             Response::error('已存在相同别名的文章，请更换别名', 422);
         }
 
+        $content = (string) $request->input('content', '');
+
+        // 未填摘要时自动从正文截取，避免列表出现空白简介
+        $summary = trim((string) $request->input('summary', ''));
+        if ($summary === '') {
+            $summary = $this->makeSummary($content);
+        }
+
         return [
             'title' => $title,
             'slug' => $slug,
-            'summary' => mb_substr(trim((string) $request->input('summary', '')), 0, 500),
-            'content' => (string) $request->input('content', ''),
+            'summary' => mb_substr($summary, 0, 500),
+            'content' => $content,
             'cover_image' => mb_substr(trim((string) $request->input('cover_image', '')), 0, 500),
             'category_id' => $categoryId,
             'status' => $status,
