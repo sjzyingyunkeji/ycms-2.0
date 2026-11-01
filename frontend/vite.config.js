@@ -127,8 +127,11 @@ function themeActivatePlugin({ srcDir, slug, outDir }) {
         await copyFile(preview, path.join(outDir, 'preview.jpg'))
       }
 
-      // 仅默认主题接管站点根入口，避免多主题构建互相覆盖
-      if (slug === 'default') {
+      // 站点根入口归属：
+      //   - 多主题仓库（主仓库：site + 可能存在的 star）由默认主题接管，避免互相覆盖
+      //   - 单主题仓库（星空仓库：只有 star）由当前主题接管，否则根入口会指向过期 hash
+      const soleTheme = !THEME_SOURCES.site
+      if (slug === 'default' || soleTheme) {
         await mkdir(PUBLIC_DIR, { recursive: true })
         await copyFile(shell, path.join(PUBLIC_DIR, 'index.html'))
       }
