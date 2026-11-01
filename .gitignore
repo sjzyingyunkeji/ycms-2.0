@@ -11,6 +11,8 @@ php-server.log
 php-server.*.log
 *.pid
 .tmp-*/
+.tmp-*
+.tmp-*.log
 
 # 运行时数据（数据库、上传、备份、更新状态、密钥）
 backend/storage/
